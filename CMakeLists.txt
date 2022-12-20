@@ -103,7 +103,11 @@ set(VCPKG_APPLOCAL_DEPS ${VCPKG_BUILD} BOOL)
 if(WIN32)
   if(NOT VCPKG_BUILD)
     ## Store path of dependecy folder
-    set(DEPENDENCY_FOLDER "${PROJECT_SOURCE_DIR}/dependencies")
+    if(MINGW)
+      set(DEPENDENCY_FOLDER "${PROJECT_SOURCE_DIR}/mingw-dependencies")
+    else(MINGW)
+      set(DEPENDENCY_FOLDER "${PROJECT_SOURCE_DIR}/dependencies")
+    endif()
   endif()
 
   ## To test if the host (not the build) is x64:
@@ -335,13 +339,24 @@ if(NOT USE_SYSTEM_PHYSFS)
     set(PHYSFS_BUILD_STATIC TRUE)
   endif()
 
-  set(PHYSFS_PREFIX ${CMAKE_BINARY_DIR}/physfs/)
+  set(PHYSFS_PREFIX ${CMAKE_BINARY_DIR}/physfs)
+
+  if(MINGW)
+    set(PHYSFS_SHARED_LIBRARY_NAME "${PHYSFS_PREFIX}/bin/libphysfs.dll")
+    set(PHYSFS_LINK_LIBRARY_NAME "${PHYSFS_PREFIX}/lib${LIB_SUFFIX}/libphysfs.dll.a")
+    set(PHYSFS_STATIC_LIBRARY_NAME "${PHYSFS_PREFIX}/lib${LIB_SUFFIX}/libphysfs.a")
+  else(MINGW)
+    set(PHYSFS_SHARED_LIBRARY_NAME "${PHYSFS_PREFIX}/bin/${CMAKE_SHARED_LIBRARY_PREFIX}physfs${CMAKE_SHARED_LIBRARY_SUFFIX}")
+    set(PHYSFS_LINK_LIBRARY_NAME "${PHYSFS_PREFIX}/lib${LIB_SUFFIX}/physfs${CMAKE_LINK_LIBRARY_SUFFIX}")
+    set(PHYSFS_STATIC_LIBRARY_NAME "${PHYSFS_PREFIX}/lib${LIB_SUFFIX}/${CMAKE_STATIC_LIBRARY_PREFIX}physfs${CMAKE_STATIC_LIBRARY_SUFFIX}")
+  endif()
+
   ExternalProject_Add(physfs
     SOURCE_DIR "${CMAKE_SOURCE_DIR}/external/physfs/"
     BUILD_BYPRODUCTS
-    "${PHYSFS_PREFIX}/bin/${CMAKE_SHARED_LIBRARY_PREFIX}physfs${CMAKE_SHARED_LIBRARY_SUFFIX}"
-    "${PHYSFS_PREFIX}/lib${LIB_SUFFIX}/physfs${CMAKE_LINK_LIBRARY_SUFFIX}"
-    "${PHYSFS_PREFIX}/lib${LIB_SUFFIX}/${CMAKE_STATIC_LIBRARY_PREFIX}physfs${CMAKE_STATIC_LIBRARY_SUFFIX}"
+    ${PHYSFS_SHARED_LIBRARY_NAME}
+    ${PHYSFS_LINK_LIBRARY_NAME}
+    ${PHYSFS_STATIC_LIBRARY_NAME}
     CMAKE_ARGS
     -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
     -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
@@ -355,11 +370,11 @@ if(NOT USE_SYSTEM_PHYSFS)
 
   if(WIN32)
     add_library(physfs_lib SHARED IMPORTED)
-    set_target_properties(physfs_lib PROPERTIES IMPORTED_LOCATION "${PHYSFS_PREFIX}/bin/${CMAKE_SHARED_LIBRARY_PREFIX}physfs${CMAKE_SHARED_LIBRARY_SUFFIX}")
-    set_target_properties(physfs_lib PROPERTIES IMPORTED_IMPLIB "${PHYSFS_PREFIX}/lib${LIB_SUFFIX}/physfs${CMAKE_LINK_LIBRARY_SUFFIX}")
+    set_target_properties(physfs_lib PROPERTIES IMPORTED_LOCATION ${PHYSFS_SHARED_LIBRARY_NAME})
+    set_target_properties(physfs_lib PROPERTIES IMPORTED_IMPLIB ${PHYSFS_LINK_LIBRARY_NAME})
   else()
     add_library(physfs_lib STATIC IMPORTED)
-    set_target_properties(physfs_lib PROPERTIES IMPORTED_LOCATION "${PHYSFS_PREFIX}/lib${LIB_SUFFIX}/${CMAKE_STATIC_LIBRARY_PREFIX}physfs${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set_target_properties(physfs_lib PROPERTIES IMPORTED_LOCATION ${PHYSFS_STATIC_LIBRARY_NAME})
   endif()
   set(PHYSFS_INCLUDE_DIR "${PHYSFS_PREFIX}/include/")
 endif()
@@ -513,13 +528,15 @@ ExternalProject_Add(squirrel
 if(WIN32)
   add_library(squirrel_lib SHARED IMPORTED)
   set_target_properties(squirrel_lib PROPERTIES IMPORTED_LOCATION "${SQUIRREL_PREFIX}/bin/${CMAKE_SHARED_LIBRARY_PREFIX}squirrel${CMAKE_SHARED_LIBRARY_SUFFIX}")
-  set_target_properties(squirrel_lib PROPERTIES IMPORTED_IMPLIB "${SQUIRREL_PREFIX}/lib/squirrel${CMAKE_LINK_LIBRARY_SUFFIX}")
+  set_target_properties(squirrel_lib PROPERTIES IMPORTED_IMPLIB "${SQUIRREL_PREFIX}/lib/libsquirrel.dll.a")
   add_library(sqstdlib_lib SHARED IMPORTED)
   set_target_properties(sqstdlib_lib PROPERTIES IMPORTED_LOCATION "${SQUIRREL_PREFIX}/bin/${CMAKE_SHARED_LIBRARY_PREFIX}sqstdlib${CMAKE_SHARED_LIBRARY_SUFFIX}")
-  set_target_properties(sqstdlib_lib PROPERTIES IMPORTED_IMPLIB "${SQUIRREL_PREFIX}/lib/sqstdlib${CMAKE_LINK_LIBRARY_SUFFIX}")
+  set_target_properties(sqstdlib_lib PROPERTIES IMPORTED_IMPLIB "${SQUIRREL_PREFIX}/lib/libsqstdlib.dll.a")
 
   #For debug run purposes
-  configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mk/msvc/run_supertux.bat.in" "${PROJECT_BINARY_DIR}/run_supertux.bat")
+  if(MSVC)
+    configure_file("${CMAKE_CURRENT_SOURCE_DIR}/mk/msvc/run_supertux.bat.in" "${PROJECT_BINARY_DIR}/run_supertux.bat")
+  endif()
 else()
   add_library(squirrel_lib STATIC IMPORTED)
   set_target_properties(squirrel_lib PROPERTIES IMPORTED_LOCATION "${SQUIRREL_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}squirrel_static${CMAKE_STATIC_LIBRARY_SUFFIX}")
@@ -908,6 +925,10 @@ if(GENERATE_WRAPPER)
   endif()
 endif(GENERATE_WRAPPER)
 
+## SM64
+add_subdirectory(external/libsm64)
+include_directories(external/libsm64/src)
+
 ## Generate supertux executable in the right place
 
 #set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR})
@@ -917,6 +938,9 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
 add_library(supertux2_c OBJECT ${SUPERTUX_SOURCES_C})
 add_library(supertux2_lib STATIC ${CMAKE_BINARY_DIR}/version.h ${SUPERTUX_SOURCES_CXX} ${SUPERTUX_RESOURCES} $<TARGET_OBJECTS:supertux2_c>)
+
+target_link_libraries(supertux2_lib PUBLIC sm64)
+target_link_libraries(supertux2_lib PUBLIC iconv)
 
 target_link_libraries(supertux2_lib PUBLIC glm::glm)
 target_compile_definitions(supertux2_lib PUBLIC -DGLM_ENABLE_EXPERIMENTAL)
@@ -955,6 +979,11 @@ endif()
 
 target_include_directories(partio_zip_lib PUBLIC external/partio_zip/)
 
+target_include_directories(supertux2_lib SYSTEM PUBLIC ${SDL_TTF_PREFIX}/include/SDL2)
+target_link_libraries(supertux2_lib PUBLIC SDL_ttf_lib)
+target_link_libraries(supertux2_lib PUBLIC savepng)
+target_link_libraries(supertux2_lib PUBLIC tinygettext_lib)
+
 if (NOT EMSCRIPTEN)
   target_include_directories(supertux2_lib SYSTEM PUBLIC ${SDL2_INCLUDE_DIRS})
   target_include_directories(supertux2_lib SYSTEM PUBLIC ${SDL2IMAGE_INCLUDE_DIRS})
@@ -965,8 +994,7 @@ if (NOT EMSCRIPTEN)
     target_link_libraries(supertux2_lib PUBLIC ${SDL2IMAGE_LIBRARIES})
   endif()
 endif()
-target_include_directories(supertux2_lib SYSTEM PUBLIC ${SDL_TTF_PREFIX}/include/SDL2)
-target_link_libraries(supertux2_lib PUBLIC SDL_ttf_lib)
+
 if(VCPKG_BUILD)
   target_link_libraries(supertux2_lib PUBLIC freetype)
 else()
@@ -979,9 +1007,7 @@ endif()
 
 target_link_libraries(supertux2_lib PUBLIC squirrel_lib)
 target_link_libraries(supertux2_lib PUBLIC sqstdlib_lib)
-target_link_libraries(supertux2_lib PUBLIC tinygettext_lib)
 target_link_libraries(supertux2_lib PUBLIC sexp)
-target_link_libraries(supertux2_lib PUBLIC savepng)
 target_link_libraries(supertux2_lib PUBLIC partio_zip_lib)
 if(ENABLE_DISCORD)
 target_link_libraries(supertux2_lib PUBLIC discord-rpc)

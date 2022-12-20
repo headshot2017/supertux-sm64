@@ -60,3 +60,6 @@ ehthumbs.db
 Thumbs.db
 .directory
 *~
+
+# SM64
+*.z64
