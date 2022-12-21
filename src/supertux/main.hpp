@@ -23,6 +23,7 @@
 #include "addon/addon_manager.hpp"
 #include "audio/sound_manager.hpp"
 #include "control/input_manager.hpp"
+#include "mario/mario_manager.hpp"
 #include "sprite/sprite_data.hpp"
 #include "sprite/sprite_manager.hpp"
 #include "squirrel/squirrel_virtual_machine.hpp"
@@ -106,6 +107,7 @@ private:
   std::unique_ptr<GameManager> m_game_manager;
   std::unique_ptr<ScreenManager> m_screen_manager;
   std::unique_ptr<Savegame> m_savegame;
+  std::unique_ptr<MarioManager> m_mario_manager;
 
 private:
   Main(const Main&) = delete;
