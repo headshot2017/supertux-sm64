@@ -81,7 +81,8 @@ Config::Config() :
   editor_autotile_mode(false),
   editor_autotile_help(true),
   editor_autosave_frequency(5),
-  repository_url()
+  repository_url(),
+  mario(true)
 {
 }
 

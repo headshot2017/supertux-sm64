@@ -24,6 +24,7 @@
 #include "gui/item_toggle.hpp"
 #include "gui/menu_item.hpp"
 #include "gui/menu_manager.hpp"
+#include "mario/mario_manager.hpp"
 #include "supertux/gameconfig.hpp"
 #include "supertux/game_session.hpp"
 #include "supertux/globals.hpp"
@@ -73,7 +74,8 @@ enum OptionsMenuIDs {
   MNID_TRANSITIONS,
   MNID_CONFIRMATION_DIALOG,
   MNID_PAUSE_ON_FOCUSLOSS,
-  MNID_CUSTOM_CURSOR
+  MNID_CUSTOM_CURSOR,
+  MNID_MARIO
 #ifdef ENABLE_TOUCHSCREEN_SUPPORT
   , MNID_MOBILE_CONTROLS
 #endif
@@ -434,6 +436,9 @@ OptionsMenu::OptionsMenu(bool complete) :
   add_toggle(MNID_PAUSE_ON_FOCUSLOSS, _("Pause on focus loss"), &g_config->pause_on_focusloss)
     .set_help(_("Automatically pause the game when the window loses focus"));
   add_toggle(MNID_CUSTOM_CURSOR, _("Use custom mouse cursor"), &g_config->custom_mouse_cursor).set_help(_("Whether the game renders its own cursor or uses the system's cursor"));
+
+  if (MarioManager::current()->Loaded())
+    add_toggle(MNID_MARIO, "Mario", &g_config->mario).set_help("Play as Mario from SM64 instead of Tux");
 
   add_submenu(_("Integrations and presence"), MenuStorage::INTEGRATIONS_MENU)
       .set_help(_("Manage whether SuperTux should display the levels you play on your social media profiles (Discord)"));

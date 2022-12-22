@@ -16,7 +16,10 @@ class MarioManager final : public Currenton<MarioManager>
 public:
   MarioManager();
 
+  bool Loaded() const { return loaded; }
+
 private:
+  bool loaded;
   uint8_t *mario_texture;
   uint16_t mario_indices[SM64_GEO_MAX_TRIANGLES * 3];
   uint32_t mario_texture_handle;

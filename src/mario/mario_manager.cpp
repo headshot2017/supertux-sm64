@@ -72,6 +72,7 @@ static const char *MARIO_SHADER =
 MarioManager::MarioManager()
 {
   /** initialize libsm64 */
+  loaded = false;
   std::ifstream file("sm64.us.z64", std::ios::ate | std::ios::binary);
 
   if (!file)
@@ -113,8 +114,9 @@ MarioManager::MarioManager()
       sm64_play_sound_global(SOUND_MENU_STAR_SOUND);
 
 	  VideoSystem::current()->init_mario(mario_texture, &mario_texture_handle, &mario_shader_handle, MARIO_SHADER);
-
       for(int i=0; i<3*SM64_GEO_MAX_TRIANGLES; i++) mario_indices[i] = i;
+
+      loaded = true;
     }
 
     delete[] romBuffer;
