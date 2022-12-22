@@ -346,4 +346,10 @@ GLVideoSystem::make_screenshot()
   return surface;
 }
 
+void
+GLVideoSystem::init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code)
+{
+  m_context->init_mario(raw_texture, texture, shader, shader_code);
+}
+
 /* EOF */

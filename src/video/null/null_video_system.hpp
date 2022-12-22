@@ -52,6 +52,9 @@ public:
   virtual void set_icon(const SDL_Surface& icon) override;
   virtual SDLSurfacePtr make_screenshot() override;
 
+  /** mario only */
+  virtual void init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code) {}
+
 private:
   Size m_window_size;
   int m_vsync_mode;

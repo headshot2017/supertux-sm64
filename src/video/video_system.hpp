@@ -20,6 +20,7 @@
 #include <string>
 #include <SDL.h>
 
+#include "mario/mario_manager.hpp"
 #include "math/size.hpp"
 #include "util/currenton.hpp"
 #include "video/sampler.hpp"
@@ -74,6 +75,9 @@ public:
   virtual void set_title(const std::string& title) = 0;
   virtual void set_icon(const SDL_Surface& icon) = 0;
   virtual SDLSurfacePtr make_screenshot() = 0;
+
+  /** mario only */
+  virtual void init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code) = 0;
 
   void do_take_screenshot();
 

@@ -54,6 +54,9 @@ public:
 
   virtual bool supports_framebuffer() const override { return true; }
 
+  /** mario only */
+  virtual void init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code) override;
+
   GLProgram& get_program() const { return *m_program; }
   GLVertexArrays& get_vertex_arrays() const { return *m_vertex_arrays; }
   GLTexture& get_white_texture() const { return *m_white_texture; }

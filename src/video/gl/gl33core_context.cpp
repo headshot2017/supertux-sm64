@@ -244,4 +244,64 @@ GL33CoreContext::draw_arrays(GLenum type, GLint first, GLsizei count)
   assert_gl();
 }
 
+/** mario stuff below */
+
+GLuint
+shader_compile( const char *shaderContents, size_t shaderContentsLength, GLenum shaderType )
+{
+  const GLchar *shaderDefine = shaderType == GL_VERTEX_SHADER 
+    ? "\n#version 130\n#define VERTEX  \n#define v2f out\n" 
+    : "\n#version 130\n#define FRAGMENT\n#define v2f in \n";
+
+  const GLchar *shaderStrings[2] = { shaderDefine, shaderContents };
+  GLint shaderStringLengths[2] = { (GLint)strlen( shaderDefine ), (GLint)shaderContentsLength };
+
+  GLuint shader = glCreateShader( shaderType );
+  glShaderSource( shader, 2, shaderStrings, shaderStringLengths );
+  glCompileShader( shader );
+
+  GLint isCompiled = 0;
+  glGetShaderiv( shader, GL_COMPILE_STATUS, &isCompiled );
+  if( isCompiled == GL_FALSE ) 
+  {
+    GLint maxLength = 0;
+    glGetShaderiv( shader, GL_INFO_LOG_LENGTH, &maxLength );
+    char *log = (char*)malloc( maxLength );
+    glGetShaderInfoLog( shader, maxLength, &maxLength, log );
+
+    //dbg_msg("libsm64", "%s shader compilation failure (%d): %s", (shaderType == GL_VERTEX_SHADER) ? "Vertex" : "Fragment", maxLength, log);
+  }
+  else {}
+    //dbg_msg("libsm64", "%s shader compiled", (shaderType == GL_VERTEX_SHADER) ? "Vertex" : "Fragment");
+
+return shader;
+}
+
+void
+GL33CoreContext::init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code)
+{
+  GLuint vert = shader_compile(shader_code, strlen(shader_code), GL_VERTEX_SHADER);
+  GLuint frag = shader_compile(shader_code, strlen(shader_code), GL_FRAGMENT_SHADER);
+
+  *shader = glCreateProgram();
+  glAttachShader(*shader, vert);
+  glAttachShader(*shader, frag);
+
+  const GLchar *attribs[] = {"position", "normal", "color", "uv"};
+  for (int i=6; i<10; i++) glBindAttribLocation(*shader, i, attribs[i-6]);
+
+  glLinkProgram(*shader);
+  glDetachShader(*shader, vert);
+  glDetachShader(*shader, frag);
+
+  // initialize texture
+  glGenTextures(1, texture);
+  glBindTexture(GL_TEXTURE_2D, *texture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SM64_TEXTURE_WIDTH, SM64_TEXTURE_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, raw_texture);
+}
+
 /* EOF */

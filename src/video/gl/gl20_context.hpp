@@ -50,6 +50,9 @@ public:
 
   virtual bool supports_framebuffer() const override { return false; }
 
+  /** mario only */
+  virtual void init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code) override {}
+
 private:
   GL20Context(const GL20Context&) = delete;
   GL20Context& operator=(const GL20Context&) = delete;

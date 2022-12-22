@@ -55,6 +55,8 @@ public:
 
   virtual bool supports_framebuffer() const = 0;
 
+  virtual void init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code) = 0;
+
 private:
   GLContext(const GLContext&) = delete;
   GLContext& operator=(const GLContext&) = delete;

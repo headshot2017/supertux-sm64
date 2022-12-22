@@ -5,6 +5,10 @@
 
 #include <stdint.h>
 
+extern "C" {
+#include <libsm64.h>
+}
+
 #include "util/currenton.hpp"
 
 class MarioManager final : public Currenton<MarioManager>
@@ -14,6 +18,9 @@ public:
 
 private:
   uint8_t *mario_texture;
+  uint16_t mario_indices[SM64_GEO_MAX_TRIANGLES * 3];
+  uint32_t mario_texture_handle;
+  uint32_t mario_shader_handle;
 
 private:
   MarioManager(const MarioManager&) = delete;
