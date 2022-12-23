@@ -17,6 +17,7 @@
 #ifndef HEADER_SUPERTUX_OBJECT_PLAYER_HPP
 #define HEADER_SUPERTUX_OBJECT_PLAYER_HPP
 
+#include "mario/mario_instance.hpp"
 #include "scripting/player.hpp"
 #include "sprite/sprite_ptr.hpp"
 #include "squirrel/exposed_object.hpp"
@@ -102,6 +103,7 @@ public:
 
   void kill(bool completely);
   void move(const Vector& vector);
+  void set_pos(const Vector& pos);
 
   bool add_bonus(const std::string& bonus);
   bool set_bonus(const std::string& bonus);
@@ -348,6 +350,12 @@ private:
 
   Climbable* m_climbing; /**< Climbable object we are currently climbing, null if none */
   std::unique_ptr<ObjectRemoveListener> m_climbing_remove_listener;
+
+  bool m_mario;
+
+public:
+  bool is_mario() const { return m_mario; }
+  MarioInstance* m_mario_obj;
 
 private:
   Player(const Player&) = delete;

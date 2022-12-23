@@ -16,6 +16,7 @@
 
 #include "video/gl/gl33core_context.hpp"
 
+#include "supertux/console.hpp"
 #include "supertux/globals.hpp"
 #include "video/color.hpp"
 #include "video/gl/gl_program.hpp"
@@ -269,17 +270,19 @@ shader_compile( const char *shaderContents, size_t shaderContentsLength, GLenum 
     char *log = (char*)malloc( maxLength );
     glGetShaderInfoLog( shader, maxLength, &maxLength, log );
 
-    //dbg_msg("libsm64", "%s shader compilation failure (%d): %s", (shaderType == GL_VERTEX_SHADER) ? "Vertex" : "Fragment", maxLength, log);
+	ConsoleBuffer::output << "Mario " << ((shaderType == GL_VERTEX_SHADER) ? "vertex" : "fragment") << " shader compilation failure: " << log << std::endl;
   }
-  else {}
-    //dbg_msg("libsm64", "%s shader compiled", (shaderType == GL_VERTEX_SHADER) ? "Vertex" : "Fragment");
+  else
+    ConsoleBuffer::output << "Mario " << ((shaderType == GL_VERTEX_SHADER) ? "vertex" : "fragment") << " shader compiled" << std::endl;
 
-return shader;
+  return shader;
 }
 
 void
 GL33CoreContext::init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code)
 {
+  assert_gl();
+
   GLuint vert = shader_compile(shader_code, strlen(shader_code), GL_VERTEX_SHADER);
   GLuint frag = shader_compile(shader_code, strlen(shader_code), GL_FRAGMENT_SHADER);
 
@@ -297,11 +300,11 @@ GL33CoreContext::init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* s
   // initialize texture
   glGenTextures(1, texture);
   glBindTexture(GL_TEXTURE_2D, *texture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SM64_TEXTURE_WIDTH, SM64_TEXTURE_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, raw_texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SM64_TEXTURE_WIDTH, SM64_TEXTURE_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, raw_texture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
 /* EOF */

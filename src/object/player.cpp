@@ -15,6 +15,8 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+#include <boost/format.hpp>
+
 #include "object/player.hpp"
 
 #include "audio/sound_manager.hpp"
@@ -22,6 +24,7 @@
 #include "control/codecontroller.hpp"
 #include "control/input_manager.hpp"
 #include "editor/editor.hpp"
+#include "mario/mario_manager.hpp"
 #include "math/util.hpp"
 #include "math/random.hpp"
 #include "object/bullet.hpp"
@@ -208,7 +211,8 @@ Player::Player(PlayerStatus& player_status, const std::string& name_) :
   m_idle_timer(),
   m_idle_stage(0),
   m_climbing(nullptr),
-  m_climbing_remove_listener(nullptr)
+  m_climbing_remove_listener(nullptr),
+  m_mario(MarioManager::current()->Loaded() && g_config->mario)
 {
   m_name = name_;
   m_idle_timer.start(static_cast<float>(IDLE_TIME[0]) / 1000.0f);
@@ -230,12 +234,18 @@ Player::Player(PlayerStatus& player_status, const std::string& name_) :
   m_lightsprite->set_blend(Blend::ADD);
 
   m_physic.reset();
+
+  if (m_mario)
+  {
+    m_mario_obj = new MarioInstance;
+  }
 }
 
 Player::~Player()
 {
   ungrab_object();
   if (m_climbing) stop_climbing(*m_climbing);
+  if (m_mario) delete m_mario_obj;
 }
 
 float
@@ -1983,6 +1993,18 @@ Player::move(const Vector& vector)
   if (m_climbing) stop_climbing(*m_climbing);
 
   m_physic.reset();
+}
+
+void
+Player::set_pos(const Vector& pos)
+{
+  m_col.set_pos(pos);
+
+  if (m_mario)
+  {
+    if (!m_mario_obj->spawned())
+      m_mario_obj->spawn(get_pos().x, get_pos().y);
+  }
 }
 
 void

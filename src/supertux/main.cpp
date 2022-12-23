@@ -445,6 +445,7 @@ Main::launch_game(const CommandLineArguments& args)
   m_video_system = VideoSystem::create(VideoSystem::VIDEO_SDL);
 #endif
   init_video();
+  m_mario_manager.reset(new MarioManager());
 
   m_ttf_surface_manager.reset(new TTFSurfaceManager());
 
@@ -477,8 +478,6 @@ Main::launch_game(const CommandLineArguments& args)
 
   m_game_manager.reset(new GameManager());
   m_screen_manager.reset(new ScreenManager(*m_video_system, *m_input_manager));
-
-  m_mario_manager.reset(new MarioManager());
 
   if (!args.filenames.empty())
   {

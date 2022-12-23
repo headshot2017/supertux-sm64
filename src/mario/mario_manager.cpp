@@ -13,6 +13,7 @@ extern "C" {
 
 #include "addon/md5.hpp"
 #include "gui/dialog.hpp"
+#include "supertux/console.hpp"
 #include "util/log.hpp"
 #include "video/video_system.hpp"
 
@@ -110,7 +111,7 @@ MarioManager::MarioManager()
       mario_texture = (uint8_t*)malloc(4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT);
 
       /** load libsm64 */
-      sm64_global_init(romBuffer, mario_texture, [](const char *msg) {log_debug << "libsm64: " << msg;});
+      sm64_global_init(romBuffer, mario_texture, [](const char *msg) {ConsoleBuffer::output << "libsm64: " << msg << "\n";});
       sm64_play_sound_global(SOUND_MENU_STAR_SOUND);
 
 	  VideoSystem::current()->init_mario(mario_texture, &mario_texture_handle, &mario_shader_handle, MARIO_SHADER);
