@@ -793,8 +793,8 @@ u32 check_npc_talk(struct MarioState *m, struct Object *o) {
 void check_kick_or_punch_wall(struct MarioState *m) {
     if (m->flags & (MARIO_PUNCHING | MARIO_KICKING | MARIO_TRIPPING)) {
         Vec3f detector;
-        detector[0] = m->pos[0] + 50.0f * sins(m->faceAngle[1]);
-        detector[2] = m->pos[2] + 50.0f * coss(m->faceAngle[1]);
+        detector[0] = m->pos[0] + 30.0f * sins(m->faceAngle[1]);
+        detector[2] = m->pos[2] + 30.0f * coss(m->faceAngle[1]);
         detector[1] = m->pos[1];
 
         if (resolve_and_return_wall_collisions(detector, 80.0f, 5.0f) != NULL) {
