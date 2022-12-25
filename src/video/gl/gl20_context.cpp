@@ -240,8 +240,6 @@ GL20Context::render_mario_instance(const SM64MarioGeometryBuffers* geometry, con
   glEnableClientState(GL_COLOR_ARRAY);
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-  ConsoleBuffer::output << camera.x << " " << camera.y << " " << pos.x << " " << pos.y << std::endl;
-
   // give mario some lighting instead of being flat colors
   GLfloat light_position[] = { pos.x, pos.y-48, 192, 1 };
   GLfloat light_diffuse[] = { 0.6f, 0.6f, 0.6f, 1 };
