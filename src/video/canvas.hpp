@@ -23,6 +23,7 @@
 #include <memory>
 #include <obstack.h>
 
+#include "mario/mario_instance.hpp"
 #include "math/rectf.hpp"
 #include "math/vector.hpp"
 #include "video/blend.hpp"
@@ -84,6 +85,8 @@ public:
 
   /** on next update, set color to lightmap's color at position */
   void get_pixel(const Vector& position, const std::shared_ptr<Color>& color_out);
+
+  void draw_mario(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh, Vector& camera, uint32_t cap, uint32_t texture, uint32_t shader, uint16_t* indices);
 
   void clear();
   void render(Renderer& renderer, Filter filter);

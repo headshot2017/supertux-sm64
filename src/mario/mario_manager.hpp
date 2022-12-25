@@ -9,6 +9,7 @@ extern "C" {
 #include <libsm64.h>
 }
 
+#include "mario/mario_instance.hpp"
 #include "util/currenton.hpp"
 
 class MarioManager final : public Currenton<MarioManager>
@@ -16,7 +17,14 @@ class MarioManager final : public Currenton<MarioManager>
 public:
   MarioManager();
 
+  void init_mario(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh);
+  void destroy_mario(MarioMesh* mesh);
+  //void render_mario(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh, uint32_t cap);
+
   bool Loaded() const { return loaded; }
+  uint16_t* get_indices() { return mario_indices; }
+  uint32_t get_texture() { return mario_texture_handle; }
+  uint32_t get_shader() { return mario_shader_handle; }
 
 private:
   bool loaded;

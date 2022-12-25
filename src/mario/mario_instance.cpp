@@ -11,20 +11,25 @@ extern "C" {
 #include <decomp/include/surface_terrains.h>
 }
 
+#include "mario/mario_manager.hpp"
 #include "math/rect.hpp"
 #include "math/rectf.hpp"
 #include "supertux/console.hpp"
 #include "supertux/sector.hpp"
+#include "video/canvas.hpp"
+#include "video/drawing_context.hpp"
 
 MarioInstance::MarioInstance()
 {
   memset(loaded_surfaces, UINT_MAX, sizeof(uint32_t) * MAX_SURFACES);
   memset(&input, 0, sizeof(input));
+  memset(&mesh, 0, sizeof(mesh));
   mario_id = -1;
 }
 
 MarioInstance::~MarioInstance()
 {
+  ConsoleBuffer::output << "call mario destructor" << std::endl;
   destroy();
 }
 
@@ -55,6 +60,7 @@ void MarioInstance::spawn(float x, float y)
     geometry.color    = new float[9 * SM64_GEO_MAX_TRIANGLES];
     geometry.uv       = new float[6 * SM64_GEO_MAX_TRIANGLES];
     geometry.numTrianglesUsed = 0;
+    MarioManager::current()->init_mario(&geometry, &mesh);
     return;
   }
 
@@ -63,12 +69,16 @@ void MarioInstance::spawn(float x, float y)
 
 void MarioInstance::destroy()
 {
+  ConsoleBuffer::output << "destroy" << std::endl;
   if (spawned())
   {
+    ConsoleBuffer::output << "destroy spawned" << std::endl;
     delete_blocks();
 
     sm64_mario_delete(mario_id);
     mario_id = -1;
+
+    MarioManager::current()->destroy_mario(&mesh);
 
     delete[] geometry.position; geometry.position = 0;
     delete[] geometry.normal; geometry.normal = 0;
@@ -98,12 +108,13 @@ void MarioInstance::update(float tickspeed)
     if ((int)(new_pos.x/32) != (int)(m_pos.x/32) || (int)(new_pos.y/32) != (int)(m_pos.y/32))
       load_new_blocks(new_pos.x/32, new_pos.y/32);
 
+    new_pos.y += 16;
     m_curr_pos = new_pos;
 
     for (int i=0; i<geometry.numTrianglesUsed*3; i++)
     {
       m_curr_geometry_pos[i*3+0] = geometry.position[i*3+0]*MARIO_SCALE;
-      m_curr_geometry_pos[i*3+1] = geometry.position[i*3+1]*-MARIO_SCALE;
+      m_curr_geometry_pos[i*3+1] = geometry.position[i*3+1]*-MARIO_SCALE + 16;
       m_curr_geometry_pos[i*3+2] = geometry.position[i*3+2]*MARIO_SCALE;
     }
   }
@@ -111,6 +122,26 @@ void MarioInstance::update(float tickspeed)
   m_pos = mix(m_last_pos, m_curr_pos, tick / (1.f/30));
   for (int i=0; i<geometry.numTrianglesUsed*9; i++)
     geometry.position[i] = m_last_geometry_pos[i] + (m_curr_geometry_pos[i] - m_last_geometry_pos[i]) * (tick / (1.f/30));
+}
+
+void MarioInstance::draw(Canvas& canvas, Vector camera)
+{
+  if (!geometry.numTrianglesUsed) return;
+  auto mariomanager = MarioManager::current();
+  //MarioManager::current()->render_mario(&geometry, &mesh, state.flags);
+
+  DrawingContext& context = canvas.get_context();
+  context.push_transform();
+
+  canvas.draw_mario(&geometry,
+                    &mesh,
+                    camera,
+                    state.flags,
+                    mariomanager->get_texture(),
+                    mariomanager->get_shader(),
+                    mariomanager->get_indices());
+
+  context.pop_transform();
 }
 
 void MarioInstance::delete_blocks()
@@ -218,6 +249,23 @@ void MarioInstance::load_new_blocks(int x, int y)
   int yadd = 0;
   int arrayInd = 0;
 
+  for (const auto& solids : Sector::get().get_solid_tilemaps())
+  {
+    for (int xadd=-7; xadd<=7; xadd++)
+    {
+      // get block at floor
+      for (yadd=0; y+yadd<=solids->get_height(); yadd++)
+      {
+        if (add_block(x+xadd, y+yadd, &arrayInd, solids)) break;
+      }
+
+      for (yadd=6; yadd>=0; yadd--)
+      {
+        add_block(x+xadd, y-yadd, &arrayInd, solids);
+      }
+    }
+  }
+
   /*
   for (const auto& solids : Sector::get().get_solid_tilemaps()) {
     // test with all tiles in this rectangle
@@ -246,20 +294,4 @@ void MarioInstance::load_new_blocks(int x, int y)
   }
   */
 
-  for (const auto& solids : Sector::get().get_solid_tilemaps())
-  {
-    for (int xadd=-7; xadd<=7; xadd++)
-    {
-      // get block at floor
-      for (yadd=0; y+yadd<=solids->get_height(); yadd++)
-      {
-        if (add_block(x+xadd, y+yadd, &arrayInd, solids)) break;
-      }
-
-      for (yadd=6; yadd>=0; yadd--)
-      {
-        add_block(x+xadd, y-yadd, &arrayInd, solids);
-      }
-    }
-  }
 }

@@ -20,6 +20,7 @@
 #include <string>
 #include <memory>
 
+#include "mario/mario_instance.hpp"
 #include "math/rectf.hpp"
 #include "math/sizef.hpp"
 #include "math/vector.hpp"
@@ -31,7 +32,7 @@ class Surface;
 
 enum RequestType
 {
-  TEXTURE, GRADIENT, FILLRECT, INVERSEELLIPSE, GETPIXEL, LINE, TRIANGLE
+  TEXTURE, GRADIENT, FILLRECT, INVERSEELLIPSE, GETPIXEL, LINE, TRIANGLE, MARIO
 };
 
 struct DrawingRequest
@@ -167,6 +168,31 @@ struct GetPixelRequest : public DrawingRequest
 private:
   GetPixelRequest(const GetPixelRequest&) = delete;
   GetPixelRequest& operator=(const GetPixelRequest&) = delete;
+};
+
+struct MarioRequest : public DrawingRequest
+{
+  MarioRequest() :
+    DrawingRequest(MARIO),
+    geometry(nullptr),
+    mesh(nullptr),
+    camera(0, 0),
+    cap(0),
+    texture(0),
+    shader(0),
+    indices(nullptr) {}
+
+  SM64MarioGeometryBuffers* geometry;
+  MarioMesh* mesh;
+  Vector camera;
+  uint32_t cap;
+  uint32_t texture;
+  uint32_t shader;
+  uint16_t* indices;
+
+private:
+  MarioRequest(const MarioRequest&) = delete;
+  MarioRequest& operator=(const MarioRequest&) = delete;	
 };
 
 #endif

@@ -54,6 +54,9 @@ public:
 
   /** mario only */
   virtual void init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code) {}
+  virtual void init_mario_instance(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh) {}
+  virtual void destroy_mario_instance(MarioMesh* mesh) {}
+  virtual void render_mario_instance(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh, uint32_t cap, uint32_t* texture, uint32_t* shader, uint16_t* indices) {}
 
 private:
   Size m_window_size;

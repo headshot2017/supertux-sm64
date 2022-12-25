@@ -21,6 +21,7 @@
 #include <SDL.h>
 
 #include "mario/mario_manager.hpp"
+#include "mario/mario_instance.hpp"
 #include "math/size.hpp"
 #include "util/currenton.hpp"
 #include "video/sampler.hpp"
@@ -78,6 +79,9 @@ public:
 
   /** mario only */
   virtual void init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code) = 0;
+  virtual void init_mario_instance(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh) = 0;
+  virtual void destroy_mario_instance(MarioMesh* mesh) = 0;
+  virtual void render_mario_instance(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh, uint32_t cap, uint32_t* texture, uint32_t* shader, uint16_t* indices) = 0;
 
   void do_take_screenshot();
 

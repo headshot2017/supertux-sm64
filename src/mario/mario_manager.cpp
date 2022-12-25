@@ -21,6 +21,7 @@ extern "C" {
 static const char *MARIO_SHADER =
 "\n uniform mat4 view;"
 "\n uniform mat4 projection;"
+"\n uniform mat3 modelviewprojection;"
 "\n uniform sampler2D marioTex;"
 "\n uniform int wingCap;"
 "\n uniform int metalCap;"
@@ -45,6 +46,7 @@ static const char *MARIO_SHADER =
 "\n         v_uv = uv;"
 "\n "
 "\n         gl_Position = projection * view * vec4( position, 1. );"
+//"\n         gl_Position = vec4( position * modelviewprojection, 1. );"
 "\n     }"
 "\n "
 "\n #endif"
@@ -56,13 +58,13 @@ static const char *MARIO_SHADER =
 "\n     {"
 "\n         float light = .5 + .5 * clamp( dot( v_normal, v_light ), 0., 1. );"
 "\n         vec4 texColor = vec4(0);"
-"\n         if (wingCap == 0 && metalCap == 0) texColor = texture2D(marioTex, v_uv);"
+"\n         if (wingCap == 0 && metalCap == 0) texColor = texture(marioTex, v_uv);"
 "\n         else if (wingCap == 1)"
 "\n         {"
-"\n             texColor = texture2D(marioTex, v_uv);"
+"\n             texColor = texture(marioTex, v_uv);"
 "\n             if (texColor.a != 1) discard;"
 "\n         }"
-"\n         else if (metalCap == 1) texColor = texture2D(marioTex, v_uv); // NEED A WAY TO MAKE REFLECTION"
+"\n         else if (metalCap == 1) texColor = texture(marioTex, v_uv); // NEED A WAY TO MAKE REFLECTION"
 "\n         vec3 mainColor = mix( v_color, texColor.rgb, texColor.a ); // v_uv.x >= 0. ? texColor.a : 0. );"
 "\n         color = vec4( mainColor * light, 1 );"
 "\n     }"
@@ -111,7 +113,7 @@ MarioManager::MarioManager()
       mario_texture = (uint8_t*)malloc(4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT);
 
       /** load libsm64 */
-      sm64_global_init(romBuffer, mario_texture, [](const char *msg) {ConsoleBuffer::output << "libsm64: " << msg << "\n";});
+      sm64_global_init(romBuffer, mario_texture, [](const char *msg) {ConsoleBuffer::output << "libsm64: " << msg << std::endl;});
       sm64_play_sound_global(SOUND_MENU_STAR_SOUND);
 
 	  VideoSystem::current()->init_mario(mario_texture, &mario_texture_handle, &mario_shader_handle, MARIO_SHADER);
@@ -123,3 +125,22 @@ MarioManager::MarioManager()
     delete[] romBuffer;
   }
 }
+
+void MarioManager::init_mario(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh)
+{
+  VideoSystem::current()->init_mario_instance(geometry, mesh);
+}
+
+void MarioManager::destroy_mario(MarioMesh* mesh)
+{
+  VideoSystem::current()->destroy_mario_instance(mesh);
+}
+
+/*
+void MarioManager::render_mario(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh, uint32_t cap)
+{
+  VideoSystem::current()->render_mario_instance(geometry, mesh, cap, &mario_texture_handle, &mario_shader_handle, mario_indices);
+}
+*/
+
+/* EOF */

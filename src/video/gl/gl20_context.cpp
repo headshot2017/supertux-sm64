@@ -20,6 +20,7 @@
 #include "video/glutil.hpp"
 #include "video/color.hpp"
 #include "video/gl/gl_texture.hpp"
+#include "video/gl/gl_video_system.hpp"
 
 #ifndef USE_OPENGLES2
 
@@ -64,6 +65,8 @@ GL20Context::ortho(float width, float height, bool vflip)
             0, static_cast<double>(height),
             -1, 1);
   }
+
+  glGetFloatv(GL_PROJECTION_MATRIX, last_proj_matrix);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -186,6 +189,94 @@ GL20Context::draw_arrays(GLenum type, GLint first, GLsizei count)
   glDrawArrays(type, first, count);
 
   assert_gl();
+}
+
+void
+GL20Context::init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code)
+{
+  // initialize texture
+  glGenTextures(1, texture);
+  glBindTexture(GL_TEXTURE_2D, *texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SM64_TEXTURE_WIDTH, SM64_TEXTURE_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, raw_texture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  // no shader in opengl 2.0
+  *shader = 0;
+}
+
+void
+GL20Context::init_mario_instance(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh)
+{
+  
+}
+
+void
+GL20Context::destroy_mario_instance(MarioMesh* mesh)
+{
+  
+}
+
+void
+GL20Context::render_mario_instance(const SM64MarioGeometryBuffers* geometry, const MarioMesh* mesh, const Vector& camera, const uint32_t cap, const uint32_t& texture, const uint32_t& shader, const uint16_t* indices)
+{
+  uint32_t triangleSize = geometry->numTrianglesUsed*3;
+
+  const Viewport& viewport = VideoSystem::current()->get_viewport();
+  const Rect& rect = viewport.get_rect();
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(camera.x, rect.get_width() - camera.x,
+          rect.get_height() + camera.y, camera.y,
+          -1000.f, 10000.f);
+
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_NORMAL_ARRAY);
+  glEnableClientState(GL_COLOR_ARRAY);
+  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+  //GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
+  //glShadeModel(GL_SMOOTH);
+  //glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+  //glEnable(GL_LIGHTING);
+  //glEnable(GL_LIGHT0);
+
+  glDepthMask(GL_TRUE);
+  glDepthFunc(GL_LEQUAL);
+  glEnable(GL_DEPTH_TEST);
+  glClear(GL_DEPTH_BUFFER_BIT);
+
+  glVertexPointer(3, GL_FLOAT, 0, geometry->position);
+  glNormalPointer(GL_FLOAT, 0, geometry->normal);
+  glColorPointer(3, GL_FLOAT, 0, geometry->color);
+  glTexCoordPointer(2, GL_FLOAT, 0, geometry->uv);
+
+  // first, draw geometry without Mario's texture.
+  glDisable(GL_TEXTURE_2D);
+  glDrawElements(GL_TRIANGLES, triangleSize, GL_UNSIGNED_SHORT, indices);
+
+  // now disable the color array and enable the texture.
+  glDisableClientState(GL_COLOR_ARRAY);
+
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glMatrixMode(GL_TEXTURE);
+  glLoadIdentity();
+
+  glDrawElements(GL_TRIANGLES, triangleSize, GL_UNSIGNED_SHORT, indices);
+
+  glDisableClientState(GL_NORMAL_ARRAY);
+  glDisable(GL_CULL_FACE);
+  glDisable(GL_LIGHTING);
+  glDisable(GL_DEPTH_TEST);
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadMatrixf(last_proj_matrix);
 }
 
 #endif

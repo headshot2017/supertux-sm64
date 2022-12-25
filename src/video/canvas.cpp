@@ -99,6 +99,10 @@ Canvas::render(Renderer& renderer, Filter filter)
       case GETPIXEL:
         painter.get_pixel(static_cast<const GetPixelRequest&>(request));
         break;
+
+      case MARIO:
+        painter.draw_mario(static_cast<const MarioRequest&>(request));
+        break;
     }
   }
 }
@@ -370,6 +374,26 @@ Canvas::get_pixel(const Vector& position, const std::shared_ptr<Color>& color_ou
   request->layer = LAYER_GETPIXEL;
   request->pos = pos;
   request->color_ptr = color_out;
+
+  m_requests.push_back(request);
+}
+
+void
+Canvas::draw_mario(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh, Vector& camera, uint32_t cap, uint32_t texture, uint32_t shader, uint16_t* indices)
+{
+  auto request = new(m_obst) MarioRequest();
+
+  request->layer = LAYER_OBJECTS+1;
+  request->flip = m_context.transform().flip;
+  request->alpha = m_context.transform().alpha;
+
+  request->geometry = geometry;
+  request->mesh = mesh;
+  request->camera = camera;
+  request->cap = cap;
+  request->texture = texture;
+  request->shader = shader;
+  request->indices = indices;
 
   m_requests.push_back(request);
 }

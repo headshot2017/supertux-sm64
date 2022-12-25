@@ -355,7 +355,7 @@ private:
 
 public:
   bool is_mario() const { return m_mario; }
-  MarioInstance* m_mario_obj;
+  MarioInstance* m_mario_obj = nullptr;
 
 private:
   Player(const Player&) = delete;

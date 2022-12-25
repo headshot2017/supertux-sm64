@@ -4,7 +4,7 @@
 #define HEADER_SUPERTUX_MARIO_INSTANCE_HPP
 
 #define MAX_SURFACES 256
-#define MARIO_SCALE 1
+#define MARIO_SCALE (50/100.f)
 
 #include <stdint.h>
 
@@ -15,11 +15,23 @@ extern "C" {
 #include "math/vector.hpp"
 #include "object/tilemap.hpp"
 
+class Canvas;
+
+struct MarioMesh
+{
+  uint32_t position_buffer;
+  uint32_t normal_buffer;
+  uint32_t color_buffer;
+  uint32_t uv_buffer;
+  uint32_t vao;
+};
+
 class MarioInstance
 {
   int mario_id;
   float tick;
   uint32_t loaded_surfaces[MAX_SURFACES];
+  MarioMesh mesh;
 
   /** for mesh interpolation */
   Vector m_pos, m_last_pos, m_curr_pos;
@@ -37,6 +49,7 @@ public:
   void spawn(float x, float y);
   void destroy();
   void update(float tickspeed);
+  void draw(Canvas& canvas, Vector camera);
 
   bool spawned() const { return mario_id != -1; }
   int ID() const { return mario_id; }

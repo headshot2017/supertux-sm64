@@ -237,6 +237,7 @@ Player::Player(PlayerStatus& player_status, const std::string& name_) :
 
   if (m_mario)
   {
+    if (m_mario_obj) delete m_mario_obj;
     m_mario_obj = new MarioInstance;
   }
 }
@@ -245,7 +246,7 @@ Player::~Player()
 {
   ungrab_object();
   if (m_climbing) stop_climbing(*m_climbing);
-  if (m_mario) delete m_mario_obj;
+  if (m_mario_obj) delete m_mario_obj;
 }
 
 float
@@ -608,6 +609,9 @@ Player::update(float dt_sec)
     }
   }
 
+  if (m_mario) {
+    m_mario_obj->update(dt_sec);
+  }
 }
 
 void
@@ -1569,6 +1573,9 @@ Player::draw(DrawingContext& context)
 
   if (!m_visible)
     return;
+
+  if (m_mario)
+    m_mario_obj->draw(context.color(), Sector::get().get_camera().get_translation());
 
   // if Tux is above camera, draw little "air arrow" to show where he is x-wise
   if (m_col.m_bbox.get_bottom() - 16 < Sector::get().get_camera().get_translation().y) {

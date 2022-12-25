@@ -209,6 +209,7 @@ GLVideoSystem::create_gl_context()
   log_info << "Using glbinding" << std::endl;
   log_info << "ARB_texture_non_power_of_two: " << static_cast<int>(extensions.find(GLextension::GL_ARB_texture_non_power_of_two) != extensions.end()) << std::endl;
 #  else
+  glewExperimental = GL_TRUE;
   GLenum err = glewInit();
 #    ifdef GLEW_ERROR_NO_GLX_DISPLAY
   // Glew can't open glx display when it's running on wayland session
@@ -350,6 +351,24 @@ void
 GLVideoSystem::init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code)
 {
   m_context->init_mario(raw_texture, texture, shader, shader_code);
+}
+
+void
+GLVideoSystem::init_mario_instance(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh)
+{
+  m_context->init_mario_instance(geometry, mesh);
+}
+
+void
+GLVideoSystem::destroy_mario_instance(MarioMesh* mesh)
+{
+  m_context->destroy_mario_instance(mesh);
+}
+
+void
+GLVideoSystem::render_mario_instance(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh, uint32_t cap, uint32_t* texture, uint32_t* shader, uint16_t* indices)
+{
+  //m_context->render_mario_instance(geometry, mesh, cap, texture, shader, indices);
 }
 
 /* EOF */
