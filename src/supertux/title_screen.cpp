@@ -19,11 +19,17 @@
 
 #include <version.h>
 
+extern "C" {
+#include <libsm64.h>
+#include <decomp/include/sm64shared.h>
+}
+
 #include "gui/menu_manager.hpp"
 #include "object/camera.hpp"
 #include "object/music_object.hpp"
 #include "object/player.hpp"
 #include "sdk/integration.hpp"
+#include "supertux/console.hpp"
 #include "supertux/fadetoblack.hpp"
 #include "supertux/game_session.hpp"
 #include "supertux/level.hpp"
@@ -64,14 +70,32 @@ TitleScreen::make_tux_jump()
 
   // Check if we should press the jump button
   Rectf lookahead = tux.get_bbox();
-  lookahead.set_right(lookahead.get_right() + 96);
-  lookahead.set_bottom(lookahead.get_bottom() - 2);
+  lookahead.set_right(lookahead.get_right() + (tux.is_mario() ? 128 : 96));
+  if (tux.is_mario()) lookahead.set_top(lookahead.get_top() - 32);
+  lookahead.set_bottom(lookahead.get_bottom() - (tux.is_mario() ? 32 : 2));
   bool pathBlocked = !sector.is_free_of_statics(lookahead);
-  if ((pathBlocked && jumpWasReleased) || tux.m_fall_mode == Player::FallMode::JUMPING) {
-    m_controller->press(Control::JUMP);
-    jumpWasReleased = false;
-  } else {
-    jumpWasReleased = true;
+
+  if (tux.is_mario())
+  {
+    sm64_mario_set_health(tux.m_mario_obj->ID(), MARIO_FULL_HEALTH);
+
+    if (!(tux.m_mario_obj->state.action & ACT_FLAG_AIR))
+    {
+      m_controller->press(Control::JUMP, pathBlocked);
+      if (!m_controller->pressed(Control::JUMP) && m_controller->hold(Control::JUMP))
+        m_controller->press(Control::JUMP, false);
+    }
+    else
+      m_controller->press(Control::JUMP);
+  }
+  else
+  {
+    if ((pathBlocked && jumpWasReleased) || tux.m_fall_mode == Player::FallMode::JUMPING) {
+      m_controller->press(Control::JUMP);
+      jumpWasReleased = false;
+    } else {
+      jumpWasReleased = true;
+    }
   }
 
   // Wrap around at the end of the level back to the beginning
@@ -89,6 +113,9 @@ void
 TitleScreen::setup()
 {
   Sector& sector = m_titlesession->get_current_sector();
+  Player& tux = sector.get_player();
+  tux.set_bonus(NO_BONUS, false);
+
   if (Sector::current() != &sector) {
     auto& music = sector.get_singleton_by_type<MusicObject>();
     music.play_music(LEVEL_MUSIC);
