@@ -379,7 +379,7 @@ Canvas::get_pixel(const Vector& position, const std::shared_ptr<Color>& color_ou
 }
 
 void
-Canvas::draw_mario(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh, Vector& camera, uint32_t cap, uint32_t texture, uint32_t shader, uint16_t* indices)
+Canvas::draw_mario(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh, Vector& pos, Vector& camera, uint32_t cap, uint32_t texture, uint32_t shader, uint16_t* indices)
 {
   auto request = new(m_obst) MarioRequest();
 
@@ -389,6 +389,7 @@ Canvas::draw_mario(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh, Vector& 
 
   request->geometry = geometry;
   request->mesh = mesh;
+  request->pos = pos;
   request->camera = camera;
   request->cap = cap;
   request->texture = texture;

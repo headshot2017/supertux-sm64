@@ -136,11 +136,4 @@ void MarioManager::destroy_mario(MarioMesh* mesh)
   VideoSystem::current()->destroy_mario_instance(mesh);
 }
 
-/*
-void MarioManager::render_mario(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh, uint32_t cap)
-{
-  VideoSystem::current()->render_mario_instance(geometry, mesh, cap, &mario_texture_handle, &mario_shader_handle, mario_indices);
-}
-*/
-
 /* EOF */

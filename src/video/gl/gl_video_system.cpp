@@ -365,10 +365,4 @@ GLVideoSystem::destroy_mario_instance(MarioMesh* mesh)
   m_context->destroy_mario_instance(mesh);
 }
 
-void
-GLVideoSystem::render_mario_instance(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh, uint32_t cap, uint32_t* texture, uint32_t* shader, uint16_t* indices)
-{
-  //m_context->render_mario_instance(geometry, mesh, cap, texture, shader, indices);
-}
-
 /* EOF */

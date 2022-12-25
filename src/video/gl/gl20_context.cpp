@@ -16,6 +16,7 @@
 
 #include "video/gl/gl20_context.hpp"
 
+#include "supertux/console.hpp"
 #include "supertux/globals.hpp"
 #include "video/glutil.hpp"
 #include "video/color.hpp"
@@ -220,16 +221,15 @@ GL20Context::destroy_mario_instance(MarioMesh* mesh)
 }
 
 void
-GL20Context::render_mario_instance(const SM64MarioGeometryBuffers* geometry, const MarioMesh* mesh, const Vector& camera, const uint32_t cap, const uint32_t& texture, const uint32_t& shader, const uint16_t* indices)
+GL20Context::render_mario_instance(const SM64MarioGeometryBuffers* geometry, const MarioMesh* mesh, const Vector& pos, const Vector& camera, const uint32_t cap, const uint32_t& texture, const uint32_t& shader, const uint16_t* indices)
 {
   uint32_t triangleSize = geometry->numTrianglesUsed*3;
 
   const Viewport& viewport = VideoSystem::current()->get_viewport();
-  const Rect& rect = viewport.get_rect();
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glOrtho(camera.x, rect.get_width() - camera.x,
-          rect.get_height() + camera.y, camera.y,
+  glOrtho(camera.x, viewport.get_screen_width() + camera.x,
+          viewport.get_screen_height() + camera.y, camera.y,
           -1000.f, 10000.f);
 
   glMatrixMode(GL_MODELVIEW);
@@ -240,11 +240,19 @@ GL20Context::render_mario_instance(const SM64MarioGeometryBuffers* geometry, con
   glEnableClientState(GL_COLOR_ARRAY);
   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-  //GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
-  //glShadeModel(GL_SMOOTH);
-  //glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-  //glEnable(GL_LIGHTING);
-  //glEnable(GL_LIGHT0);
+  ConsoleBuffer::output << camera.x << " " << camera.y << " " << pos.x << " " << pos.y << std::endl;
+
+  // give mario some lighting instead of being flat colors
+  GLfloat light_position[] = { pos.x, pos.y-48, 192, 1 };
+  GLfloat light_diffuse[] = { 0.6f, 0.6f, 0.6f, 1 };
+  GLfloat light_model[] = { 0.5f, 0.5f, 0.5f, 1 };
+  glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+  glLightModelfv(GL_LIGHT_MODEL_AMBIENT, light_model);
+  glShadeModel(GL_SMOOTH);
+  glEnable(GL_COLOR_MATERIAL);
+  glEnable(GL_LIGHTING);
+  glEnable(GL_LIGHT0);
 
   glDepthMask(GL_TRUE);
   glDepthFunc(GL_LEQUAL);

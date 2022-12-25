@@ -14,6 +14,7 @@ extern "C" {
 #include "mario/mario_manager.hpp"
 #include "math/rect.hpp"
 #include "math/rectf.hpp"
+#include "object/camera.hpp"
 #include "supertux/console.hpp"
 #include "supertux/sector.hpp"
 #include "video/canvas.hpp"
@@ -113,6 +114,8 @@ void MarioInstance::update(float tickspeed)
 
     for (int i=0; i<geometry.numTrianglesUsed*3; i++)
     {
+      geometry.normal[i*3+1] *= -1;
+
       m_curr_geometry_pos[i*3+0] = geometry.position[i*3+0]*MARIO_SCALE;
       m_curr_geometry_pos[i*3+1] = geometry.position[i*3+1]*-MARIO_SCALE + 16;
       m_curr_geometry_pos[i*3+2] = geometry.position[i*3+2]*MARIO_SCALE;
@@ -120,21 +123,25 @@ void MarioInstance::update(float tickspeed)
   }
 
   m_pos = mix(m_last_pos, m_curr_pos, tick / (1.f/30));
-  for (int i=0; i<geometry.numTrianglesUsed*9; i++)
-    geometry.position[i] = m_last_geometry_pos[i] + (m_curr_geometry_pos[i] - m_last_geometry_pos[i]) * (tick / (1.f/30));
+  for (int i=0; i<geometry.numTrianglesUsed*3; i++)
+  {
+    geometry.position[i*3+0] = m_last_geometry_pos[i*3+0] + (m_curr_geometry_pos[i*3+0] - m_last_geometry_pos[i*3+0]) * (tick / (1.f/30));
+    geometry.position[i*3+1] = m_last_geometry_pos[i*3+1] + (m_curr_geometry_pos[i*3+1] - m_last_geometry_pos[i*3+1]) * (tick / (1.f/30));
+    geometry.position[i*3+2] = m_last_geometry_pos[i*3+2] + (m_curr_geometry_pos[i*3+2] - m_last_geometry_pos[i*3+2]) * (tick / (1.f/30));
+  }
 }
 
 void MarioInstance::draw(Canvas& canvas, Vector camera)
 {
   if (!geometry.numTrianglesUsed) return;
   auto mariomanager = MarioManager::current();
-  //MarioManager::current()->render_mario(&geometry, &mesh, state.flags);
 
   DrawingContext& context = canvas.get_context();
   context.push_transform();
 
   canvas.draw_mario(&geometry,
                     &mesh,
+                    m_pos,
                     camera,
                     state.flags,
                     mariomanager->get_texture(),

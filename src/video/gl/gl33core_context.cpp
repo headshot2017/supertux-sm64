@@ -352,7 +352,7 @@ GL33CoreContext::destroy_mario_instance(MarioMesh* mesh)
 }
 
 void
-GL33CoreContext::render_mario_instance(const SM64MarioGeometryBuffers* geometry, const MarioMesh* mesh, const Vector& camera, const uint32_t cap, const uint32_t& texture, const uint32_t& shader, const uint16_t* indices)
+GL33CoreContext::render_mario_instance(const SM64MarioGeometryBuffers* geometry, const MarioMesh* mesh, const Vector& pos, const Vector& camera, const uint32_t cap, const uint32_t& texture, const uint32_t& shader, const uint16_t* indices)
 {
   glBindBuffer(GL_ARRAY_BUFFER, mesh->position_buffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(VEC3) * 3 * SM64_GEO_MAX_TRIANGLES, geometry->position, GL_DYNAMIC_DRAW);
