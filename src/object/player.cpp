@@ -553,7 +553,7 @@ Player::update(float dt_sec)
   }
 
   // calculate movement for this frame
-  m_col.set_movement(m_physic.get_movement(dt_sec) + Vector(m_boost * dt_sec, 0));
+  if (!m_mario) m_col.set_movement(m_physic.get_movement(dt_sec) + Vector(m_boost * dt_sec, 0));
 
   if (m_grabbed_object != nullptr && !m_dying)
   {
@@ -611,6 +611,8 @@ Player::update(float dt_sec)
 
   if (m_mario) {
     m_mario_obj->update(dt_sec);
+    set_pos(m_mario_obj->get_pos() - Vector(m_col.m_bbox.get_width() / 2.f, m_col.m_bbox.get_height()), true);
+	m_physic.set_velocity(Vector(0));
   }
 }
 
@@ -1103,6 +1105,16 @@ Player::handle_input()
     handle_input_ghost();
     return;
   }
+
+  if (m_mario)
+  {
+    m_mario_obj->input.stickX = m_controller->hold(Control::LEFT) ? 1 : m_controller->hold(Control::RIGHT) ? -1 : 0;
+    m_mario_obj->input.buttonA = m_controller->hold(Control::JUMP);
+    m_mario_obj->input.buttonB = m_controller->hold(Control::ACTION);
+    m_mario_obj->input.buttonZ = m_controller->hold(Control::DOWN);
+    return;
+  }
+
   if (m_climbing) {
     handle_input_climbing();
     return;
@@ -1574,9 +1586,6 @@ Player::draw(DrawingContext& context)
   if (!m_visible)
     return;
 
-  if (m_mario)
-    m_mario_obj->draw(context.color(), Sector::get().get_camera().get_translation());
-
   // if Tux is above camera, draw little "air arrow" to show where he is x-wise
   if (m_col.m_bbox.get_bottom() - 16 < Sector::get().get_camera().get_translation().y) {
     float px = m_col.m_bbox.get_left() + (m_col.m_bbox.get_right() - m_col.m_bbox.get_left() - static_cast<float>(m_airarrow.get()->get_width())) / 2.0f;
@@ -1584,6 +1593,9 @@ Player::draw(DrawingContext& context)
     py += std::min(((py - (m_col.m_bbox.get_bottom() + 16)) / 4), 16.0f);
     context.color().draw_surface(m_airarrow, Vector(px, py), LAYER_HUD - 1);
   }
+
+  if (m_mario)
+    m_mario_obj->draw(context.color(), Sector::get().get_camera().get_translation());
 
   std::string sa_prefix = "";
   std::string sa_postfix = "";
@@ -1745,6 +1757,8 @@ Player::draw(DrawingContext& context)
   */
 
   /* Draw Tux */
+  if (m_mario) return;
+
   if (m_safe_timer.started() && size_t(g_game_time*40)%2)
     ;  // don't draw Tux
   else if (m_player_status.bonus == EARTH_BONUS){ // draw special effects with earthflower bonus
@@ -1912,6 +1926,8 @@ Player::make_invincible()
 void
 Player::kill(bool completely)
 {
+  if (m_mario) return;
+
   if (m_dying || m_deactivated || is_winning() )
     return;
 
@@ -2003,14 +2019,16 @@ Player::move(const Vector& vector)
 }
 
 void
-Player::set_pos(const Vector& pos)
+Player::set_pos(const Vector& pos, bool tuxToMario)
 {
   m_col.set_pos(pos);
 
-  if (m_mario)
+  if (m_mario && !tuxToMario)
   {
     if (!m_mario_obj->spawned())
       m_mario_obj->spawn(get_pos().x, get_pos().y);
+    else
+      m_mario_obj->set_pos(pos);
   }
 }
 

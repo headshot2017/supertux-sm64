@@ -104,6 +104,10 @@ TitleScreen::leave()
 {
   Sector& sector = m_titlesession->get_current_sector();
   sector.deactivate();
+
+  if (sector.get_player().is_mario())
+	  sector.get_player().m_mario_obj->delete_blocks();
+
   MenuManager::instance().clear_menu_stack();
 }
 

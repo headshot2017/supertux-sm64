@@ -62,6 +62,34 @@ void MarioInstance::spawn(float x, float y)
     geometry.uv       = new float[6 * SM64_GEO_MAX_TRIANGLES];
     geometry.numTrianglesUsed = 0;
     MarioManager::current()->init_mario(&geometry, &mesh);
+
+    // load a static surface way below the level
+    uint32_t surfaceCount = 2;
+	SM64Surface surfaces[surfaceCount];
+
+	for (uint32_t i=0; i<surfaceCount; i++)
+	{
+		surfaces[i].type = SURFACE_DEFAULT;
+		surfaces[i].force = 0;
+		surfaces[i].terrain = TERRAIN_STONE;
+	}
+	
+	int width = Sector::get().get_width()/2 / MARIO_SCALE;
+	int spawnX = width;
+	int spawnY = (Sector::get().get_height()+256) / -MARIO_SCALE;
+
+    ConsoleBuffer::output << Sector::get().get_width() << " " << Sector::get().get_height() << std::endl;
+	
+	surfaces[surfaceCount-2].vertices[0][0] = spawnX + width + 128;		surfaces[surfaceCount-2].vertices[0][1] = spawnY;	surfaces[surfaceCount-2].vertices[0][2] = +128;
+	surfaces[surfaceCount-2].vertices[1][0] = spawnX - width - 128;		surfaces[surfaceCount-2].vertices[1][1] = spawnY;	surfaces[surfaceCount-2].vertices[1][2] = -128;
+	surfaces[surfaceCount-2].vertices[2][0] = spawnX - width - 128;		surfaces[surfaceCount-2].vertices[2][1] = spawnY;	surfaces[surfaceCount-2].vertices[2][2] = +128;
+
+	surfaces[surfaceCount-1].vertices[0][0] = spawnX - width - 128;		surfaces[surfaceCount-1].vertices[0][1] = spawnY;	surfaces[surfaceCount-1].vertices[0][2] = -128;
+	surfaces[surfaceCount-1].vertices[1][0] = spawnX + width + 128;		surfaces[surfaceCount-1].vertices[1][1] = spawnY;	surfaces[surfaceCount-1].vertices[1][2] = +128;
+	surfaces[surfaceCount-1].vertices[2][0] = spawnX + width + 128;		surfaces[surfaceCount-1].vertices[2][1] = spawnY;	surfaces[surfaceCount-1].vertices[2][2] = -128;
+
+	sm64_static_surfaces_load(surfaces, surfaceCount);
+
     return;
   }
 
@@ -149,6 +177,14 @@ void MarioInstance::draw(Canvas& canvas, Vector camera)
                     mariomanager->get_indices());
 
   context.pop_transform();
+}
+
+void MarioInstance::set_pos(const Vector& pos)
+{
+  if (!spawned() || pos.x <= 0 || pos.y <= 0)
+    return;
+
+  sm64_set_mario_position(mario_id, pos.x/MARIO_SCALE, -pos.y/MARIO_SCALE, 0);
 }
 
 void MarioInstance::delete_blocks()

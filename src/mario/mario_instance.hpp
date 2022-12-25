@@ -38,7 +38,6 @@ class MarioInstance
   float m_last_geometry_pos[SM64_GEO_MAX_TRIANGLES * 9], m_curr_geometry_pos[SM64_GEO_MAX_TRIANGLES * 9];
 
   /** sm64 surface objects */
-  void delete_blocks();
   bool add_block(int x, int y, int *i, TileMap* solids);
   void load_new_blocks(int x, int y);
 
@@ -50,6 +49,9 @@ public:
   void destroy();
   void update(float tickspeed);
   void draw(Canvas& canvas, Vector camera);
+
+  void delete_blocks();
+  void set_pos(const Vector& pos);
 
   bool spawned() const { return mario_id != -1; }
   int ID() const { return mario_id; }

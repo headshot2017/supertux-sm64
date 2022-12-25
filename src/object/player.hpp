@@ -103,7 +103,7 @@ public:
 
   void kill(bool completely);
   void move(const Vector& vector);
-  void set_pos(const Vector& pos);
+  void set_pos(const Vector& pos, bool tuxToMario = false);
 
   bool add_bonus(const std::string& bonus);
   bool set_bonus(const std::string& bonus);
