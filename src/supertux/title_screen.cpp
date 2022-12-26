@@ -114,7 +114,7 @@ TitleScreen::setup()
 {
   Sector& sector = m_titlesession->get_current_sector();
   Player& tux = sector.get_player();
-  tux.set_bonus(NO_BONUS, false);
+  if (tux.is_mario()) tux.set_bonus(NO_BONUS, false);
 
   if (Sector::current() != &sector) {
     auto& music = sector.get_singleton_by_type<MusicObject>();
