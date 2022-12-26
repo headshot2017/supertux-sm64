@@ -184,7 +184,9 @@ Coin::collect()
   soundSource->play();
   SoundManager::current()->manage_source(std::move(soundSource));
 
-  Sector::get().get_player().get_status().add_coins(1, false);
+  Player& tux = Sector::get().get_player();
+  tux.get_status().add_coins(1, false);
+  if (tux.is_mario()) tux.m_mario_obj->heal(1);
   Sector::get().add<BouncyCoin>(get_pos(), false, get_sprite_name());
   Sector::get().get_level().m_stats.increment_coins();
   remove_me();

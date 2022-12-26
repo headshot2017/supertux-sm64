@@ -10,6 +10,7 @@
 
 extern "C" {
 #include <libsm64.h>
+#include <decomp/include/sm64shared.h>
 }
 
 #include "math/vector.hpp"
@@ -50,9 +51,14 @@ public:
   void update(float tickspeed);
   void draw(Canvas& canvas, Vector camera);
 
+  void bounce(bool jump);
+  void hurt(uint32_t damage, Vector& src);
+  void heal(uint8_t amount);
+
   void delete_blocks();
   void set_pos(const Vector& pos);
 
+  bool dead() const { return state.health == MARIO_DEAD_HEALTH; }
   bool spawned() const { return mario_id != -1; }
   int ID() const { return mario_id; }
   Vector get_pos() const { return m_pos; }

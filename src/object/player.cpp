@@ -611,8 +611,21 @@ Player::update(float dt_sec)
 
   if (m_mario) {
     m_mario_obj->update(dt_sec);
-    set_pos(m_mario_obj->get_pos() - Vector(m_col.m_bbox.get_width() / 2.f, m_col.m_bbox.get_height()), true);
+    set_pos(m_mario_obj->get_pos() - Vector(m_col.m_bbox.get_width() / 2.f, m_col.m_bbox.get_height()+1), true);
 	m_physic.set_velocity(Vector(0));
+
+    if (m_mario_obj->dead() && !m_dying_timer.started())
+    {
+      m_safe_timer.stop();
+      m_invincible_timer.stop();
+      m_dying = true;
+      m_dying_timer.start(3.0);
+      set_group(COLGROUP_DISABLED);
+
+      // TODO: need nice way to handle players dying in co-op mode
+      Sector::get().get_effect().fade_out(3.0);
+      SoundManager::current()->pause_music(3.0);
+    }
   }
 }
 
@@ -1856,7 +1869,7 @@ Player::collision_solid(const CollisionHit& hit)
   }
 
   // crushed?
-  if (hit.crush) {
+  if (hit.crush && !m_mario) {
     if (hit.left || hit.right) {
       kill(true);
     } else if (hit.top || hit.bottom) {
@@ -1924,9 +1937,13 @@ Player::make_invincible()
 }
 
 void
-Player::kill(bool completely)
+Player::kill(bool completely, uint32_t marioDamage, Vector src)
 {
-  if (m_mario) return;
+  if (m_mario)
+  {
+    m_mario_obj->hurt(marioDamage, src);
+    return;
+  }
 
   if (m_dying || m_deactivated || is_winning() )
     return;
@@ -2094,6 +2111,12 @@ Player::get_velocity() const
 void
 Player::bounce(BadGuy& )
 {
+  if (m_mario)
+  {
+    m_mario_obj->bounce(m_controller->hold(Control::JUMP));
+    return;
+  }
+
   if (!(m_player_status.bonus == AIR_BONUS))
     m_physic.set_velocity_y(m_controller->hold(Control::JUMP) ? -520.0f : -300.0f);
   else {

@@ -428,7 +428,7 @@ BadGuy::collision_player(Player& player, const CollisionHit& )
     //unfreeze();
     return FORCE_MOVE;
 
-  player.kill(false);
+  player.kill(false, 1, get_pos());
   return FORCE_MOVE;
 }
 

@@ -6,8 +6,8 @@
 #include <string.h>
 #include <limits.h>
 
+#define INT_SUBTYPE_BIG_KNOCKBACK 0x00000008
 extern "C" {
-#include <decomp/include/sm64shared.h>
 #include <decomp/include/surface_terrains.h>
 }
 
@@ -77,8 +77,6 @@ void MarioInstance::spawn(float x, float y)
 	int width = Sector::get().get_width()/2 / MARIO_SCALE;
 	int spawnX = width;
 	int spawnY = (Sector::get().get_height()+256) / -MARIO_SCALE;
-
-    ConsoleBuffer::output << Sector::get().get_width() << " " << Sector::get().get_height() << std::endl;
 	
 	surfaces[surfaceCount-2].vertices[0][0] = spawnX + width + 128;		surfaces[surfaceCount-2].vertices[0][1] = spawnY;	surfaces[surfaceCount-2].vertices[0][2] = +128;
 	surfaces[surfaceCount-2].vertices[1][0] = spawnX - width - 128;		surfaces[surfaceCount-2].vertices[1][1] = spawnY;	surfaces[surfaceCount-2].vertices[1][2] = -128;
@@ -98,10 +96,8 @@ void MarioInstance::spawn(float x, float y)
 
 void MarioInstance::destroy()
 {
-  ConsoleBuffer::output << "destroy" << std::endl;
   if (spawned())
   {
-    ConsoleBuffer::output << "destroy spawned" << std::endl;
     delete_blocks();
 
     sm64_mario_delete(mario_id);
@@ -177,6 +173,24 @@ void MarioInstance::draw(Canvas& canvas, Vector camera)
                     mariomanager->get_indices());
 
   context.pop_transform();
+}
+
+void MarioInstance::bounce(bool jump)
+{
+  sm64_mario_attack(mario_id, state.position[0], state.position[1]-8, state.position[2], 0);
+  if (jump && !(state.action & ACT_FLAG_INVULNERABLE)) sm64_set_mario_velocity(mario_id, state.velocity[0], 50, 0);
+}
+
+void MarioInstance::hurt(uint32_t damage, Vector& src)
+{
+  if (state.action & ACT_FLAG_INVULNERABLE) return;
+  uint32_t subtype = (damage >= 3) ? INT_SUBTYPE_BIG_KNOCKBACK : 0;
+  sm64_mario_take_damage(mario_id, damage, subtype, src.x/MARIO_SCALE, src.y/MARIO_SCALE, 0);
+}
+
+void MarioInstance::heal(uint8_t amount)
+{
+  sm64_mario_heal(mario_id, amount);
 }
 
 void MarioInstance::set_pos(const Vector& pos)

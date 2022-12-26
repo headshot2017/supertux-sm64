@@ -101,7 +101,7 @@ public:
   Direction peeking_direction_x() const { return m_peekingX; }
   Direction peeking_direction_y() const { return m_peekingY; }
 
-  void kill(bool completely);
+  void kill(bool completely, uint32_t marioDamage = 1, Vector src = Vector(0));
   void move(const Vector& vector);
   void set_pos(const Vector& pos, bool tuxToMario = false);
 

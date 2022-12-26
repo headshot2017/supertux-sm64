@@ -149,7 +149,7 @@ Explosion::collision(GameObject& other, const CollisionHit& )
 
   auto player = dynamic_cast<Player*>(&other);
   if (player != nullptr) {
-    player->kill(false);
+    player->kill(false, 3, get_pos());
   }
 
   auto badguy = dynamic_cast<BadGuy*>(&other);
