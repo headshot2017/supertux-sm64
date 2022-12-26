@@ -616,6 +616,21 @@ Player::update(float dt_sec)
 
     if (m_mario_obj->dead() && !m_dying_timer.started())
     {
+      if (m_player_status.can_reach_checkpoint())
+      {
+        for (int i = 0; i < 5; i++)
+        {
+          // the numbers: starting x, starting y, velocity y
+          Sector::get().add<FallingCoin>(get_pos() +
+                                                      Vector(graphicsRandom.randf(5.0f), graphicsRandom.randf(-32.0f, 18.0f)),
+                                                      graphicsRandom.randf(-100.0f, 100.0f));
+        }
+        m_player_status.take_checkpoint_coins();
+      }
+      else
+      {
+        GameSession::current()->set_reset_point("", Vector(0.0f, 0.0f));
+      }
       m_safe_timer.stop();
       m_invincible_timer.stop();
       m_dying = true;
