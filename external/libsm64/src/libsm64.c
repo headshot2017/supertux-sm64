@@ -586,7 +586,12 @@ SM64_LIB_FN void sm64_mario_heal(int32_t marioId, uint8_t healCounter)
 	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
 	global_state_bind( globalState );
 
-	gMarioState->healCounter += healCounter;
+	if (gMarioState->health < MARIO_FULL_HEALTH)
+	{
+		play_sound(SOUND_MENU_POWER_METER, gMarioState->marioObj->header.gfx.cameraToObject);
+		gMarioState->health += healCounter * 272;
+		if (gMarioState->health > MARIO_FULL_HEALTH) gMarioState->health = MARIO_FULL_HEALTH;
+	}
 }
 
 SM64_LIB_FN void sm64_mario_set_health(int32_t marioId, uint16_t health)
