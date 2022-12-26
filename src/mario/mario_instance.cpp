@@ -8,6 +8,7 @@
 
 #define INT_SUBTYPE_BIG_KNOCKBACK 0x00000008
 extern "C" {
+#include <decomp/include/audio_defines.h>
 #include <decomp/include/surface_terrains.h>
 }
 
@@ -178,6 +179,13 @@ void MarioInstance::draw(Canvas& canvas, Vector camera)
 void MarioInstance::bounce(bool jump)
 {
   sm64_mario_attack(mario_id, state.position[0], state.position[1]-8, state.position[2], 0);
+
+  if (state.action == ACT_GROUND_POUND)
+  {
+    sm64_set_mario_action(mario_id, ACT_TRIPLE_JUMP);
+    sm64_play_sound_global(SOUND_ACTION_HIT);
+  }
+
   if (jump && !(state.action & ACT_FLAG_INVULNERABLE)) sm64_set_mario_velocity(mario_id, state.velocity[0], 50, 0);
 }
 
