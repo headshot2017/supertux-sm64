@@ -66,7 +66,7 @@ uint32_t fake_damage_knock_back(struct MarioState *m, uint32_t damage,uint32_t i
             damage = 0;
         }
 
-        m->hurtCounter += 4 * damage; // apply hurt counter
+        m->hurtCounter += 2 * damage; // apply hurt counter
 
         if (interactionSubtype & INT_SUBTYPE_BIG_KNOCKBACK) {
             m->forwardVel = 40.0f;
