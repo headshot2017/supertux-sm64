@@ -479,6 +479,9 @@ Main::launch_game(const CommandLineArguments& args)
   m_game_manager.reset(new GameManager());
   m_screen_manager.reset(new ScreenManager(*m_video_system, *m_input_manager));
 
+  if (!m_mario_manager->error_message.empty())
+    Dialog::show_message(m_mario_manager->error_message);
+
   if (!args.filenames.empty())
   {
     for(const auto& start_level : args.filenames)

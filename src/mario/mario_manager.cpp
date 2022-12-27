@@ -80,7 +80,7 @@ MarioManager::MarioManager()
 
   if (!file)
   {
-    Dialog::show_message("Super Mario 64 US ROM not found!\nPlease provide a ROM with the filename \"sm64.us.z64\"");
+    error_message = "Super Mario 64 US ROM not found!\nPlease provide a ROM with the filename \"sm64.us.z64\"";
   }
   else
   {
@@ -102,10 +102,8 @@ MarioManager::MarioManager()
     std::string SM64_MD5 = "20b854b239203baf6c961b850a4a51a2";
     if (hexResult.compare(SM64_MD5)) // mismatch
     {
-      std::string text = str(boost::format("Super Mario 64 US ROM MD5 mismatch!\nExpected: %s\nYour copy: %s\nPlease provide the correct ROM")
-                         % SM64_MD5 % hexResult);
-
-      Dialog::show_message(text);
+      error_message = str(boost::format("Super Mario 64 US ROM MD5 mismatch!\nExpected: %s\nYour copy: %s\nPlease provide the correct ROM")
+                      % SM64_MD5 % hexResult);
     }
     else
     {

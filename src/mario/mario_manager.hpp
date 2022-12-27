@@ -21,6 +21,7 @@ public:
   void destroy_mario(MarioMesh* mesh);
   //void render_mario(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh, uint32_t cap);
 
+  std::string error_message;
   bool Loaded() const { return loaded; }
   uint16_t* get_indices() { return mario_indices; }
   uint32_t get_texture() { return mario_texture_handle; }
