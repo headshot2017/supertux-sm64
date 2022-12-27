@@ -235,6 +235,7 @@ GL20Context::render_mario_instance(const SM64MarioGeometryBuffers* geometry, con
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
+  glColor4f(1,1,1,1);
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_NORMAL_ARRAY);
   glEnableClientState(GL_COLOR_ARRAY);
@@ -277,7 +278,6 @@ GL20Context::render_mario_instance(const SM64MarioGeometryBuffers* geometry, con
   glDrawElements(GL_TRIANGLES, triangleSize, GL_UNSIGNED_SHORT, indices);
 
   glDisableClientState(GL_NORMAL_ARRAY);
-  glDisable(GL_CULL_FACE);
   glDisable(GL_LIGHTING);
   glDisable(GL_DEPTH_TEST);
 
