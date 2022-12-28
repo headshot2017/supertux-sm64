@@ -54,6 +54,7 @@ public:
 
   void bounce(bool jump);
   void hurt(uint32_t damage, Vector& src);
+  void kill(bool falling_sfx = false);
   void heal(uint8_t amount);
 
   void delete_blocks();

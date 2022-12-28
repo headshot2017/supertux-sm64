@@ -16,6 +16,10 @@
 //  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include <boost/format.hpp>
+extern "C" {
+#include <libsm64.h>
+#include <decomp/include/audio_defines.h>
+}
 
 #include "object/player.hpp"
 
@@ -1956,7 +1960,10 @@ Player::kill(bool completely, uint32_t marioDamage, Vector src)
 {
   if (m_mario)
   {
-    m_mario_obj->hurt(marioDamage, src);
+    if (!completely)
+      m_mario_obj->hurt(marioDamage, src);
+    else
+      m_mario_obj->kill(get_pos().y > Sector::get().get_height());
     return;
   }
 

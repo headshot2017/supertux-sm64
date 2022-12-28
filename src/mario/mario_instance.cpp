@@ -26,13 +26,13 @@ MarioInstance::MarioInstance()
   memset(loaded_surfaces, UINT_MAX, sizeof(uint32_t) * MAX_SURFACES);
   memset(&input, 0, sizeof(input));
   memset(&mesh, 0, sizeof(mesh));
+  state.health = MARIO_FULL_HEALTH;
   mario_id = -1;
   m_attacked = 0;
 }
 
 MarioInstance::~MarioInstance()
 {
-  ConsoleBuffer::output << "call mario destructor" << std::endl;
   destroy();
 }
 
@@ -161,7 +161,7 @@ void MarioInstance::update(float tickspeed)
 
 void MarioInstance::draw(Canvas& canvas, Vector camera)
 {
-  if (!geometry.numTrianglesUsed) return;
+  if (!geometry.numTrianglesUsed || !spawned()) return;
   auto mariomanager = MarioManager::current();
 
   DrawingContext& context = canvas.get_context();
@@ -181,6 +181,7 @@ void MarioInstance::draw(Canvas& canvas, Vector camera)
 
 void MarioInstance::bounce(bool jump)
 {
+  if (!spawned()) return;
   state.velocity[1] = 10; // for badguy squish check
   m_attacked = 2;
   sm64_mario_attack(mario_id, state.position[0], state.position[1]-8, state.position[2], 0);
@@ -196,13 +197,28 @@ void MarioInstance::bounce(bool jump)
 
 void MarioInstance::hurt(uint32_t damage, Vector& src)
 {
-  if (state.action & ACT_FLAG_INVULNERABLE || m_attacked) return;
+  if (!spawned() || state.action & ACT_FLAG_INVULNERABLE || m_attacked) return;
   uint32_t subtype = (damage >= 3) ? INT_SUBTYPE_BIG_KNOCKBACK : 0;
   sm64_mario_take_damage(mario_id, damage, subtype, src.x/MARIO_SCALE, src.y/MARIO_SCALE, 0);
 }
 
+void MarioInstance::kill(bool falling_sfx)
+{
+  if (dead()) return;
+  if (falling_sfx)
+  {
+    sm64_play_sound_global(SOUND_MARIO_WAAAOOOW);
+	destroy();
+  }
+  else
+    sm64_mario_kill(mario_id);
+
+  state.health = MARIO_DEAD_HEALTH;
+}
+
 void MarioInstance::heal(uint8_t amount)
 {
+  if (!spawned()) return;
   sm64_mario_heal(mario_id, amount);
 }
 
