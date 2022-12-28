@@ -125,17 +125,19 @@ HitResponse
 MrIceBlock::collision_player(Player& player, const CollisionHit& hit)
 {
   // handle kicks from left or right side
-  if ((ice_state == ICESTATE_WAKING || ice_state == ICESTATE_FLAT) && get_state() == STATE_ACTIVE) {
-    if (hit.left) {
-      m_dir = Direction::RIGHT;
-      player.kick();
-      set_state(ICESTATE_KICKED);
-      return FORCE_MOVE;
-    } else if (hit.right) {
-      m_dir = Direction::LEFT;
-      player.kick();
-      set_state(ICESTATE_KICKED);
-      return FORCE_MOVE;
+  if (!player.is_mario() || !player.m_mario_obj->attacked()) {
+    if ((ice_state == ICESTATE_WAKING || ice_state == ICESTATE_FLAT) && get_state() == STATE_ACTIVE) {
+      if (hit.left) {
+        m_dir = Direction::RIGHT;
+        player.kick();
+        set_state(ICESTATE_KICKED);
+        return FORCE_MOVE;
+      } else if (hit.right) {
+        m_dir = Direction::LEFT;
+        player.kick();
+        set_state(ICESTATE_KICKED);
+        return FORCE_MOVE;
+      }
     }
   }
 

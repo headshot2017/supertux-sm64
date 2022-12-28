@@ -366,8 +366,15 @@ BadGuy::collision(GameObject& other, const CollisionHit& hit)
         kill_fall();
         return FORCE_MOVE;
       }
-      if (collision_squished(*player)) {
-        return FORCE_MOVE;
+
+      if (!player->is_mario()) {
+        if (collision_squished(*player)) {
+          return FORCE_MOVE;
+        }
+      } else {
+        if (player->m_mario_obj->state.velocity[1] <= 0 && collision_squished(*player)){
+          return FORCE_MOVE;
+        }
       }
     }
 

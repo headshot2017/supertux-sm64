@@ -33,6 +33,7 @@ class MarioInstance
   float tick;
   uint32_t loaded_surfaces[MAX_SURFACES];
   MarioMesh mesh;
+  int m_attacked;
 
   /** for mesh interpolation */
   Vector m_pos, m_last_pos, m_curr_pos;
@@ -60,6 +61,7 @@ public:
 
   bool dead() const { return state.health == MARIO_DEAD_HEALTH; }
   bool spawned() const { return mario_id != -1; }
+  bool attacked() const { return m_attacked; }
   int ID() const { return mario_id; }
   Vector get_pos() const { return m_pos; }
 

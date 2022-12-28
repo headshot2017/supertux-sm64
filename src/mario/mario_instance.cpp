@@ -27,6 +27,7 @@ MarioInstance::MarioInstance()
   memset(&input, 0, sizeof(input));
   memset(&mesh, 0, sizeof(mesh));
   mario_id = -1;
+  m_attacked = 0;
 }
 
 MarioInstance::~MarioInstance()
@@ -123,6 +124,8 @@ void MarioInstance::update(float tickspeed)
   {
     tick -= 1.f/30;
 
+    if (m_attacked) m_attacked--;
+
     m_last_pos = m_curr_pos;
     memcpy(m_last_geometry_pos, m_curr_geometry_pos, sizeof(m_curr_geometry_pos));
 
@@ -178,6 +181,8 @@ void MarioInstance::draw(Canvas& canvas, Vector camera)
 
 void MarioInstance::bounce(bool jump)
 {
+  state.velocity[1] = 10; // for badguy squish check
+  m_attacked = 2;
   sm64_mario_attack(mario_id, state.position[0], state.position[1]-8, state.position[2], 0);
 
   if (state.action == ACT_GROUND_POUND)
@@ -191,7 +196,7 @@ void MarioInstance::bounce(bool jump)
 
 void MarioInstance::hurt(uint32_t damage, Vector& src)
 {
-  if (state.action & ACT_FLAG_INVULNERABLE) return;
+  if (state.action & ACT_FLAG_INVULNERABLE || m_attacked) return;
   uint32_t subtype = (damage >= 3) ? INT_SUBTYPE_BIG_KNOCKBACK : 0;
   sm64_mario_take_damage(mario_id, damage, subtype, src.x/MARIO_SCALE, src.y/MARIO_SCALE, 0);
 }
@@ -203,7 +208,7 @@ void MarioInstance::heal(uint8_t amount)
 
 void MarioInstance::set_pos(const Vector& pos)
 {
-  if (!spawned() || pos.x <= 0 || pos.y <= 0)
+  if (!spawned() || pos.x <= 0 || pos.y <= 0 || pos.x >= Sector::get().get_width() || pos.y >= Sector::get().get_height())
     return;
 
   sm64_set_mario_position(mario_id, pos.x/MARIO_SCALE, -pos.y/MARIO_SCALE, 0);
@@ -330,33 +335,4 @@ void MarioInstance::load_new_blocks(int x, int y)
       }
     }
   }
-
-  /*
-  for (const auto& solids : Sector::get().get_solid_tilemaps()) {
-    // test with all tiles in this rectangle
-    const Rect test_tiles = solids->get_tiles_overlapping(rect);
-
-    for (int x = test_tiles.left; x < test_tiles.right; ++x) {
-      for (int y = test_tiles.top; y < test_tiles.bottom; ++y) {
-        const Tile& tile = solids->get_tile(x, y);
-
-        if (!(tile.get_attributes() & tiletype))
-          continue;
-        if (tile.is_unisolid () && ignoreUnisolid)
-          continue;
-        if (tile.is_slope ()) {
-          AATriangle triangle;
-          const Rectf tbbox = solids->get_tile_bbox(x, y);
-          triangle = AATriangle(tbbox, tile.get_data());
-          Constraints constraints;
-          if (!collision::rectangle_aatriangle(&constraints, rect, triangle))
-            continue;
-        }
-        // We have a solid tile that overlaps the given rectangle.
-        return false;
-      }
-    }
-  }
-  */
-
 }
