@@ -4,7 +4,6 @@
 
 #include <stdint.h>
 #include <string.h>
-#include <limits.h>
 
 #define INT_SUBTYPE_BIG_KNOCKBACK 0x00000008
 extern "C" {
@@ -16,19 +15,21 @@ extern "C" {
 #include "math/rect.hpp"
 #include "math/rectf.hpp"
 #include "object/camera.hpp"
+#include "object/player.hpp"
 #include "supertux/console.hpp"
 #include "supertux/sector.hpp"
 #include "video/canvas.hpp"
 #include "video/drawing_context.hpp"
 
-MarioInstance::MarioInstance()
+MarioInstance::MarioInstance(Player* player) :
+  m_player(player),
+  mario_id(-1),
+  m_attacked(0)
 {
   memset(loaded_surfaces, UINT_MAX, sizeof(uint32_t) * MAX_SURFACES);
   memset(&input, 0, sizeof(input));
   memset(&mesh, 0, sizeof(mesh));
   state.health = MARIO_FULL_HEALTH;
-  mario_id = -1;
-  m_attacked = 0;
 }
 
 MarioInstance::~MarioInstance()
@@ -40,6 +41,7 @@ void MarioInstance::spawn(float x, float y)
 {
   destroy();
   tick = 0;
+  m_attacked = 0;
 
   // on supertux, up coordinate is Y-, SM64 is Y+. flip the Y coordinate
   // scale conversions:
@@ -65,30 +67,32 @@ void MarioInstance::spawn(float x, float y)
     geometry.numTrianglesUsed = 0;
     MarioManager::current()->init_mario(&geometry, &mesh);
 
+    load_all_movingobjects();
+
     // load a static surface way below the level
     uint32_t surfaceCount = 2;
-	SM64Surface surfaces[surfaceCount];
+    SM64Surface surfaces[surfaceCount];
 
-	for (uint32_t i=0; i<surfaceCount; i++)
-	{
-		surfaces[i].type = SURFACE_DEFAULT;
-		surfaces[i].force = 0;
-		surfaces[i].terrain = TERRAIN_STONE;
-	}
+    for (uint32_t i=0; i<surfaceCount; i++)
+    {
+      surfaces[i].type = SURFACE_DEFAULT;
+      surfaces[i].force = 0;
+      surfaces[i].terrain = TERRAIN_STONE;
+    }
 	
-	int width = Sector::get().get_width()/2 / MARIO_SCALE;
-	int spawnX = width;
-	int spawnY = (Sector::get().get_height()+256) / -MARIO_SCALE;
-	
-	surfaces[surfaceCount-2].vertices[0][0] = spawnX + width + 128;		surfaces[surfaceCount-2].vertices[0][1] = spawnY;	surfaces[surfaceCount-2].vertices[0][2] = +128;
-	surfaces[surfaceCount-2].vertices[1][0] = spawnX - width - 128;		surfaces[surfaceCount-2].vertices[1][1] = spawnY;	surfaces[surfaceCount-2].vertices[1][2] = -128;
-	surfaces[surfaceCount-2].vertices[2][0] = spawnX - width - 128;		surfaces[surfaceCount-2].vertices[2][1] = spawnY;	surfaces[surfaceCount-2].vertices[2][2] = +128;
+    int width = Sector::get().get_width()/2 / MARIO_SCALE;
+    int spawnX = width;
+    int spawnY = (Sector::get().get_height()+256) / -MARIO_SCALE;
 
-	surfaces[surfaceCount-1].vertices[0][0] = spawnX - width - 128;		surfaces[surfaceCount-1].vertices[0][1] = spawnY;	surfaces[surfaceCount-1].vertices[0][2] = -128;
-	surfaces[surfaceCount-1].vertices[1][0] = spawnX + width + 128;		surfaces[surfaceCount-1].vertices[1][1] = spawnY;	surfaces[surfaceCount-1].vertices[1][2] = +128;
-	surfaces[surfaceCount-1].vertices[2][0] = spawnX + width + 128;		surfaces[surfaceCount-1].vertices[2][1] = spawnY;	surfaces[surfaceCount-1].vertices[2][2] = -128;
+    surfaces[surfaceCount-2].vertices[0][0] = spawnX + width + 128;		surfaces[surfaceCount-2].vertices[0][1] = spawnY;	surfaces[surfaceCount-2].vertices[0][2] = +128;
+    surfaces[surfaceCount-2].vertices[1][0] = spawnX - width - 128;		surfaces[surfaceCount-2].vertices[1][1] = spawnY;	surfaces[surfaceCount-2].vertices[1][2] = -128;
+    surfaces[surfaceCount-2].vertices[2][0] = spawnX - width - 128;		surfaces[surfaceCount-2].vertices[2][1] = spawnY;	surfaces[surfaceCount-2].vertices[2][2] = +128;
 
-	sm64_static_surfaces_load(surfaces, surfaceCount);
+    surfaces[surfaceCount-1].vertices[0][0] = spawnX - width - 128;		surfaces[surfaceCount-1].vertices[0][1] = spawnY;	surfaces[surfaceCount-1].vertices[0][2] = -128;
+    surfaces[surfaceCount-1].vertices[1][0] = spawnX + width + 128;		surfaces[surfaceCount-1].vertices[1][1] = spawnY;	surfaces[surfaceCount-1].vertices[1][2] = +128;
+    surfaces[surfaceCount-1].vertices[2][0] = spawnX + width + 128;		surfaces[surfaceCount-1].vertices[2][1] = spawnY;	surfaces[surfaceCount-1].vertices[2][2] = -128;
+
+    sm64_static_surfaces_load(surfaces, surfaceCount);
 
     return;
   }
@@ -101,6 +105,7 @@ void MarioInstance::destroy()
   if (spawned())
   {
     delete_blocks();
+    delete_all_movingobjects();
 
     sm64_mario_delete(mario_id);
     mario_id = -1;
@@ -125,6 +130,23 @@ void MarioInstance::update(float tickspeed)
     tick -= 1.f/30;
 
     if (m_attacked) m_attacked--;
+
+    for (int i=0; i<MAX_MOVINGOBJECTS; i++)
+    {
+      MarioMovingObject* sm64obj = &loaded_movingobjects[i];
+      if (sm64obj->ID == UINT_MAX) continue;
+
+      if (sm64obj->obj->get_group() == COLGROUP_DISABLED)
+        sm64obj->transform.position[2] = 256; // make it out of reach
+      else
+      {
+        Vector pos = sm64obj->obj->get_pos();
+        sm64obj->transform.position[0] = pos.x / MARIO_SCALE;
+        sm64obj->transform.position[1] = (-pos.y-16) / MARIO_SCALE;
+        sm64obj->transform.position[2] = 0;
+      }
+      sm64_surface_object_move(sm64obj->ID, &sm64obj->transform);
+    }
 
     m_last_pos = m_curr_pos;
     memcpy(m_last_geometry_pos, m_curr_geometry_pos, sizeof(m_curr_geometry_pos));
@@ -228,6 +250,95 @@ void MarioInstance::set_pos(const Vector& pos)
     return;
 
   sm64_set_mario_position(mario_id, pos.x/MARIO_SCALE, -pos.y/MARIO_SCALE, 0);
+}
+
+void MarioInstance::delete_all_movingobjects()
+{
+  for (int i=0; i<MAX_MOVINGOBJECTS; i++)
+  {
+    if (loaded_movingobjects[i].ID == UINT_MAX) continue;
+    sm64_surface_object_delete(loaded_movingobjects[i].ID);
+    loaded_movingobjects[i].ID = UINT_MAX;
+    loaded_movingobjects[i].obj = nullptr;
+  }
+}
+
+void MarioInstance::load_all_movingobjects()
+{
+  delete_all_movingobjects();
+
+  for (auto& object_ptr : Sector::get().get_objects())
+  {
+    MovingObject* object = dynamic_cast<MovingObject*>(object_ptr.get());
+    if (!object || object->get_group() != COLGROUP_STATIC)
+      continue;
+
+    Vector pos = object->get_pos();
+    Vector bbox = object->get_bbox().get_size().as_vector();
+
+    SM64SurfaceObject sm64obj;
+    memset(&sm64obj.transform, 0, sizeof(struct SM64ObjectTransform));
+    sm64obj.transform.position[0] = pos.x / MARIO_SCALE;
+    sm64obj.transform.position[1] = (-pos.y-16) / MARIO_SCALE;
+    sm64obj.transform.position[2] = 0;
+    sm64obj.surfaceCount = 4*2;
+    sm64obj.surfaces = (struct SM64Surface*)malloc(sizeof(struct SM64Surface) * sm64obj.surfaceCount);
+
+    // block ground face
+    sm64obj.surfaces[0].vertices[0][0] = bbox.x / MARIO_SCALE;	sm64obj.surfaces[0].vertices[0][1] = bbox.y / MARIO_SCALE;	sm64obj.surfaces[0].vertices[0][2] = 64 / MARIO_SCALE;
+    sm64obj.surfaces[0].vertices[1][0] = 0 / MARIO_SCALE;		sm64obj.surfaces[0].vertices[1][1] = bbox.y / MARIO_SCALE;	sm64obj.surfaces[0].vertices[1][2] = -64 / MARIO_SCALE;
+    sm64obj.surfaces[0].vertices[2][0] = 0 / MARIO_SCALE;		sm64obj.surfaces[0].vertices[2][1] = bbox.y / MARIO_SCALE;	sm64obj.surfaces[0].vertices[2][2] = 64 / MARIO_SCALE;
+
+    sm64obj.surfaces[1].vertices[0][0] = 0 / MARIO_SCALE; 		sm64obj.surfaces[1].vertices[0][1] = bbox.y / MARIO_SCALE;	sm64obj.surfaces[1].vertices[0][2] = -64 / MARIO_SCALE;
+    sm64obj.surfaces[1].vertices[1][0] = bbox.x / MARIO_SCALE;	sm64obj.surfaces[1].vertices[1][1] = bbox.y / MARIO_SCALE;	sm64obj.surfaces[1].vertices[1][2] = 64 / MARIO_SCALE;
+    sm64obj.surfaces[1].vertices[2][0] = bbox.x / MARIO_SCALE;	sm64obj.surfaces[1].vertices[2][1] = bbox.y / MARIO_SCALE;	sm64obj.surfaces[1].vertices[2][2] = -64 / MARIO_SCALE;
+
+	// left (Z+)
+    sm64obj.surfaces[2].vertices[0][2] = -64 / MARIO_SCALE;		sm64obj.surfaces[2].vertices[0][1] = 0 / MARIO_SCALE;		sm64obj.surfaces[2].vertices[0][0] = 0 / MARIO_SCALE;
+    sm64obj.surfaces[2].vertices[1][2] = 64 / MARIO_SCALE;		sm64obj.surfaces[2].vertices[1][1] = bbox.y / MARIO_SCALE;	sm64obj.surfaces[2].vertices[1][0] = 0 / MARIO_SCALE;
+    sm64obj.surfaces[2].vertices[2][2] = -64 / MARIO_SCALE;		sm64obj.surfaces[2].vertices[2][1] = bbox.y / MARIO_SCALE;	sm64obj.surfaces[2].vertices[2][0] = 0 / MARIO_SCALE;
+
+    sm64obj.surfaces[3].vertices[0][2] = 64 / MARIO_SCALE;		sm64obj.surfaces[3].vertices[0][1] = bbox.y / MARIO_SCALE;	sm64obj.surfaces[3].vertices[0][0] = 0 / MARIO_SCALE;
+    sm64obj.surfaces[3].vertices[1][2] = -64 / MARIO_SCALE;		sm64obj.surfaces[3].vertices[1][1] = 0 / MARIO_SCALE;		sm64obj.surfaces[3].vertices[1][0] = 0 / MARIO_SCALE;
+    sm64obj.surfaces[3].vertices[2][2] = 64 / MARIO_SCALE;		sm64obj.surfaces[3].vertices[2][1] = 0 / MARIO_SCALE;		sm64obj.surfaces[3].vertices[2][0] = 0 / MARIO_SCALE;
+
+	// right (Z-)
+    sm64obj.surfaces[4].vertices[0][2] = 64 / MARIO_SCALE;		sm64obj.surfaces[4].vertices[0][1] = 0 / MARIO_SCALE;		sm64obj.surfaces[4].vertices[0][0] = bbox.x / MARIO_SCALE;
+    sm64obj.surfaces[4].vertices[1][2] = -64 / MARIO_SCALE;		sm64obj.surfaces[4].vertices[1][1] = bbox.y / MARIO_SCALE;	sm64obj.surfaces[4].vertices[1][0] = bbox.x / MARIO_SCALE;
+    sm64obj.surfaces[4].vertices[2][2] = 64 / MARIO_SCALE;		sm64obj.surfaces[4].vertices[2][1] = bbox.y / MARIO_SCALE;	sm64obj.surfaces[4].vertices[2][0] = bbox.x / MARIO_SCALE;
+
+    sm64obj.surfaces[5].vertices[0][2] = -64 / MARIO_SCALE;		sm64obj.surfaces[5].vertices[0][1] = bbox.y / MARIO_SCALE;	sm64obj.surfaces[5].vertices[0][0] = bbox.x / MARIO_SCALE;
+    sm64obj.surfaces[5].vertices[1][2] = 64 / MARIO_SCALE;		sm64obj.surfaces[5].vertices[1][1] = 0 / MARIO_SCALE;		sm64obj.surfaces[5].vertices[1][0] = bbox.x / MARIO_SCALE;
+    sm64obj.surfaces[5].vertices[2][2] = -64 / MARIO_SCALE;		sm64obj.surfaces[5].vertices[2][1] = 0 / MARIO_SCALE;		sm64obj.surfaces[5].vertices[2][0] = bbox.x / MARIO_SCALE;
+
+	// block bottom face
+    sm64obj.surfaces[6].vertices[0][0] = 0 / MARIO_SCALE;		sm64obj.surfaces[6].vertices[0][1] = 0 / MARIO_SCALE;		sm64obj.surfaces[6].vertices[0][2] = 64 / MARIO_SCALE;
+    sm64obj.surfaces[6].vertices[1][0] = 0 / MARIO_SCALE;		sm64obj.surfaces[6].vertices[1][1] = 0 / MARIO_SCALE;		sm64obj.surfaces[6].vertices[1][2] = -64 / MARIO_SCALE;
+    sm64obj.surfaces[6].vertices[2][0] = bbox.x / MARIO_SCALE;	sm64obj.surfaces[6].vertices[2][1] = 0 / MARIO_SCALE;		sm64obj.surfaces[6].vertices[2][2] = 64 / MARIO_SCALE;
+
+    sm64obj.surfaces[7].vertices[0][0] = bbox.x / MARIO_SCALE;	sm64obj.surfaces[7].vertices[0][1] = 0 / MARIO_SCALE;		sm64obj.surfaces[7].vertices[0][2] = -64 / MARIO_SCALE;
+    sm64obj.surfaces[7].vertices[1][0] = bbox.x / MARIO_SCALE;	sm64obj.surfaces[7].vertices[1][1] = 0 / MARIO_SCALE;		sm64obj.surfaces[7].vertices[1][2] = 64 / MARIO_SCALE;
+    sm64obj.surfaces[7].vertices[2][0] = 0 / MARIO_SCALE;		sm64obj.surfaces[7].vertices[2][1] = 0 / MARIO_SCALE;		sm64obj.surfaces[7].vertices[2][2] = -64 / MARIO_SCALE;
+
+    for (uint32_t ind=0; ind<sm64obj.surfaceCount; ind++)
+    {
+      sm64obj.surfaces[ind].type = SURFACE_DEFAULT;
+      sm64obj.surfaces[ind].force = 0;
+      sm64obj.surfaces[ind].terrain = TERRAIN_STONE;
+    }
+
+    for (int ind=0; ind<MAX_MOVINGOBJECTS; ind++)
+    {
+      if (loaded_movingobjects[ind].ID != UINT_MAX) continue;
+
+      loaded_movingobjects[ind].ID = sm64_surface_object_create(&sm64obj);
+      loaded_movingobjects[ind].obj = object;
+      loaded_movingobjects[ind].transform = sm64obj.transform;
+      break;
+    }
+
+    free(sm64obj.surfaces);
+  }
 }
 
 void MarioInstance::delete_blocks()

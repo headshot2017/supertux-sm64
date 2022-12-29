@@ -242,7 +242,7 @@ Player::Player(PlayerStatus& player_status, const std::string& name_) :
   if (m_mario)
   {
     if (m_mario_obj) delete m_mario_obj;
-    m_mario_obj = new MarioInstance;
+    m_mario_obj = new MarioInstance(this);
   }
 }
 
@@ -615,7 +615,7 @@ Player::update(float dt_sec)
 
   if (m_mario) {
     m_mario_obj->update(dt_sec);
-    set_pos(m_mario_obj->get_pos() - Vector(m_col.m_bbox.get_width() / 2.f, m_col.m_bbox.get_height()+1), true);
+    set_pos(m_mario_obj->get_pos() - Vector(m_col.m_bbox.get_width() / 2.f, m_col.m_bbox.get_height()-8), true);
 	m_physic.set_velocity(Vector(0));
 
     if (m_mario_obj->dead() && !m_dying_timer.started())

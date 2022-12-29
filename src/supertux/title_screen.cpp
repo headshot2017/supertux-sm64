@@ -133,7 +133,10 @@ TitleScreen::leave()
   sector.deactivate();
 
   if (sector.get_player().is_mario())
-	  sector.get_player().m_mario_obj->delete_blocks();
+  {
+    sector.get_player().m_mario_obj->delete_blocks();
+    sector.get_player().m_mario_obj->delete_all_movingobjects();
+  }
 
   MenuManager::instance().clear_menu_stack();
 }

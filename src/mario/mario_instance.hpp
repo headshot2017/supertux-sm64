@@ -4,9 +4,11 @@
 #define HEADER_SUPERTUX_MARIO_INSTANCE_HPP
 
 #define MAX_SURFACES 256
+#define MAX_MOVINGOBJECTS 1024
 #define MARIO_SCALE (50/100.f)
 
 #include <stdint.h>
+#include <limits.h>
 
 extern "C" {
 #include <libsm64.h>
@@ -15,8 +17,10 @@ extern "C" {
 
 #include "math/vector.hpp"
 #include "object/tilemap.hpp"
+#include "supertux/moving_object.hpp"
 
 class Canvas;
+class Player;
 
 struct MarioMesh
 {
@@ -27,11 +31,25 @@ struct MarioMesh
   uint32_t vao;
 };
 
+struct MarioMovingObject
+{
+  MarioMovingObject() :
+    ID(UINT_MAX),
+    obj(nullptr)
+  {}
+
+  uint32_t ID;
+  MovingObject* obj;
+  SM64ObjectTransform transform;
+};
+
 class MarioInstance
 {
+  Player* m_player;
   int mario_id;
   float tick;
   uint32_t loaded_surfaces[MAX_SURFACES];
+  MarioMovingObject loaded_movingobjects[MAX_MOVINGOBJECTS];
   MarioMesh mesh;
   int m_attacked;
 
@@ -42,9 +60,10 @@ class MarioInstance
   /** sm64 surface objects */
   bool add_block(int x, int y, int *i, TileMap* solids);
   void load_new_blocks(int x, int y);
+  void load_all_movingobjects();
 
 public:
-  MarioInstance();
+  MarioInstance(Player* player);
   ~MarioInstance();
 
   void spawn(float x, float y);
@@ -58,6 +77,7 @@ public:
   void heal(uint8_t amount);
 
   void delete_blocks();
+  void delete_all_movingobjects();
   void set_pos(const Vector& pos);
 
   bool dead() const { return state.health == MARIO_DEAD_HEALTH; }
