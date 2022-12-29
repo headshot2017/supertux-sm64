@@ -365,11 +365,11 @@ u32 check_ledge_grab(struct MarioState *m, struct Surface *wall, Vec3f intendedP
 
     //! Since the search for floors starts at y + 160, we will sometimes grab
     // a higher ledge than expected (glitchy ledge grab)
-    ledgePos[0] = nextPos[0] - wall->normal.x * 60.0f;
-    ledgePos[2] = nextPos[2] - wall->normal.z * 60.0f;
+    ledgePos[0] = nextPos[0] - wall->normal.x * 30.0f;
+    ledgePos[2] = nextPos[2] - wall->normal.z * 30.0f;
     ledgePos[1] = find_floor(ledgePos[0], nextPos[1] + 120.0f, ledgePos[2], &ledgeFloor);
 
-    if (ledgePos[1] - nextPos[1] <= 100.0f) {
+    if (ledgePos[1] - nextPos[1] <= 80.0f) { // originally 100.0f
         return FALSE;
     }
 
