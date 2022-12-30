@@ -141,8 +141,9 @@ void MarioInstance::update(float tickspeed)
       else
       {
         Vector pos = sm64obj->obj->get_pos();
+        Vector bbox = sm64obj->obj->get_bbox().get_size().as_vector();
         sm64obj->transform.position[0] = pos.x / MARIO_SCALE;
-        sm64obj->transform.position[1] = (-pos.y-16) / MARIO_SCALE;
+        sm64obj->transform.position[1] = (-pos.y-16 - (bbox.y-32)) / MARIO_SCALE;
         sm64obj->transform.position[2] = 0;
       }
       sm64_surface_object_move(sm64obj->ID, &sm64obj->transform);
@@ -279,7 +280,7 @@ void MarioInstance::load_all_movingobjects()
     SM64SurfaceObject sm64obj;
     memset(&sm64obj.transform, 0, sizeof(struct SM64ObjectTransform));
     sm64obj.transform.position[0] = pos.x / MARIO_SCALE;
-    sm64obj.transform.position[1] = (-pos.y-16) / MARIO_SCALE;
+    sm64obj.transform.position[1] = (-pos.y-16 - (bbox.y-32)) / MARIO_SCALE;
     sm64obj.transform.position[2] = 0;
     sm64obj.surfaceCount = 4*2;
     sm64obj.surfaces = (struct SM64Surface*)malloc(sizeof(struct SM64Surface) * sm64obj.surfaceCount);
