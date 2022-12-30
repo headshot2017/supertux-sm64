@@ -111,6 +111,7 @@ Config::load()
   config_mapping.get("confirmation_dialog", confirmation_dialog);
   config_mapping.get("pause_on_focusloss", pause_on_focusloss);
   config_mapping.get("custom_mouse_cursor", custom_mouse_cursor);
+  config_mapping.get("mario", mario);
 
   boost::optional<ReaderMapping> config_integrations_mapping;
   if (config_mapping.get("integrations", config_integrations_mapping))
@@ -254,6 +255,7 @@ Config::save()
   writer.write("confirmation_dialog", confirmation_dialog);
   writer.write("pause_on_focusloss", pause_on_focusloss);
   writer.write("custom_mouse_cursor", custom_mouse_cursor);
+  writer.write("mario", mario);
 
   writer.start_list("integrations");
   {
