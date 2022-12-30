@@ -616,7 +616,12 @@ Player::update(float dt_sec)
   if (m_mario) {
     m_mario_obj->update(dt_sec);
     set_pos(m_mario_obj->get_pos() - Vector(m_col.m_bbox.get_width() / 2.f, m_col.m_bbox.get_height()-8), true);
-	m_physic.set_velocity(Vector(0));
+    if (!m_deactivated)
+      m_physic.set_velocity(Vector(0));
+    else
+    {
+      m_mario_obj->input.stickX = -m_physic.get_velocity_x() / 230;
+    }
 
     if (m_mario_obj->dead() && !m_dying_timer.started())
     {
