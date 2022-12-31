@@ -41,6 +41,7 @@ extern "C" {
 #include "object/sprite_particle.hpp"
 #include "sprite/sprite.hpp"
 #include "sprite/sprite_manager.hpp"
+#include "supertux/console.hpp"
 #include "supertux/game_session.hpp"
 #include "supertux/gameconfig.hpp"
 #include "supertux/sector.hpp"
@@ -557,7 +558,7 @@ Player::update(float dt_sec)
   }
 
   // calculate movement for this frame
-  if (!m_mario) m_col.set_movement(m_physic.get_movement(dt_sec) + Vector(m_boost * dt_sec, 0));
+  if (!m_mario || m_deactivated) m_col.set_movement(m_physic.get_movement(dt_sec) + Vector(m_boost * dt_sec, 0));
 
   if (m_grabbed_object != nullptr && !m_dying)
   {
@@ -615,12 +616,37 @@ Player::update(float dt_sec)
 
   if (m_mario) {
     m_mario_obj->update(dt_sec);
-    set_pos(m_mario_obj->get_pos() - Vector(m_col.m_bbox.get_width() / 2.f, m_col.m_bbox.get_height()-8), true);
+
     if (!m_deactivated)
+    {
+      set_pos(m_mario_obj->get_pos() - Vector(m_col.m_bbox.get_width() / 2.f, m_col.m_bbox.get_height()-8), true);
       m_physic.set_velocity(Vector(0));
+    }
     else
     {
-      m_mario_obj->input.stickX = -m_physic.get_velocity_x() / 230;
+      // handle mario in cutscenes
+      m_mario_obj->input.buttonA = m_mario_obj->input.buttonB = m_mario_obj->input.buttonZ = false;
+      int divider = (m_physic.get_velocity_x() > 150) ? 380 : 340;
+      bool faster = fabsf(m_physic.get_velocity_x() / divider) > fabsf(m_mario_obj->input.stickX);
+      float dist = m_mario_obj->get_pos().x - get_pos().x;
+
+      m_mario_obj->input.stickX = (faster) ? -m_physic.get_velocity_x() / divider : m_mario_obj->input.stickX;
+	  sm64_set_mario_velocity(m_mario_obj->ID(), 0, m_mario_obj->state.velocity[1], m_mario_obj->state.velocity[2]);
+      int sign[] = {(m_mario_obj->input.stickX > 0) ? 1 : -1, (dist > 0) ? 1 : -1};
+
+      if (abs(dist) > 96)
+      {
+        if (m_physic.get_velocity_x())
+          sm64_set_mario_forward_velocity(m_mario_obj->ID(), -m_mario_obj->input.stickX * divider / 15);
+        else if (m_mario_obj->input.stickX)
+          m_mario_obj->input.stickX *= (sign[0] != sign[1]) ? -1 : 1;
+        else
+          m_mario_obj->input.stickX = (dist > 0) ? 0.5f : -0.5f;
+      }
+      else if (abs(dist) > 24)
+        m_mario_obj->input.stickX *= (sign[0] != sign[1]) ? -1 : 1;
+      else
+        m_mario_obj->input.stickX = 0;
     }
 
     if (m_mario_obj->dead() && !m_dying_timer.started())
@@ -957,6 +983,8 @@ Player::do_duck() {
   if (m_does_buttjump)
     return;
 
+  if (m_mario && m_deactivated) m_mario_obj->input.buttonZ = true;
+
   if (adjust_height(DUCKED_TUX_HEIGHT)) {
     m_duck = true;
     m_growing = false;
@@ -976,6 +1004,8 @@ Player::do_standup(bool force_standup) {
     return;
   if (m_stone)
     return;
+
+  if (m_mario && m_deactivated) m_mario_obj->input.buttonZ = false;
 
   if (m_swimming ? adjust_height(TUX_WIDTH) : adjust_height(BIG_TUX_HEIGHT)) {
     m_duck = false;
@@ -1002,7 +1032,7 @@ Player::do_backflip() {
   m_backflip_direction = (m_dir == Direction::LEFT)?(+1):(-1);
   m_backflipping = true;
   do_jump((m_player_status.bonus == AIR_BONUS) ? -720.0f : -580.0f);
-  SoundManager::current()->play("sounds/flip.wav");
+  if (!m_mario) SoundManager::current()->play("sounds/flip.wav");
   m_backflip_timer.start(TUX_BACKFLIP_TIME);
 }
 
@@ -1020,6 +1050,11 @@ Player::do_jump(float yspeed) {
     m_can_jump = false;
 
     // play sound
+    if (m_mario) {
+      if (m_deactivated) m_mario_obj->input.buttonA = true;
+      return;
+    }
+
     if (is_big()) {
       SoundManager::current()->play("sounds/bigjump.wav");
     } else {
@@ -2183,6 +2218,7 @@ void Player::walk(float speed)
 void Player::set_dir(bool right)
 {
   m_dir = right ? Direction::RIGHT : Direction::LEFT;
+  if (m_mario && m_deactivated) m_mario_obj->input.stickX = (right) ? -0.1f : 0.1f;
 }
 
 void
