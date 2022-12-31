@@ -622,8 +622,8 @@ s32 act_debug_free_move(struct MarioState *m) {
 
 void general_star_dance_handler(struct MarioState *m, s32 isInWater) {
 //  s32 dialogID;
-//  if (m->actionState == 0) {
-//      switch (++m->actionTimer) {
+    if (m->actionState == 0) {
+        switch (++m->actionTimer) {
 //          case 1:
 //              spawn_object(m->marioObj, MODEL_STAR, bhvCelebrationStar);
 //              disable_background_sound();
@@ -638,9 +638,9 @@ void general_star_dance_handler(struct MarioState *m, s32 isInWater) {
 //              }
 //              break;
 
-//          case 42:
-//              play_sound(SOUND_MARIO_HERE_WE_GO, m->marioObj->header.gfx.cameraToObject);
-//              break;
+            case 42:
+                play_sound(SOUND_MARIO_HERE_WE_GO, m->marioObj->header.gfx.cameraToObject);
+                break;
 
 //          case 80:
 //              if ((m->actionArg & 1) == 0) {
@@ -651,8 +651,8 @@ void general_star_dance_handler(struct MarioState *m, s32 isInWater) {
 //                  m->actionState = 1;
 //              }
 //              break;
-//      }
-//  } else if (m->actionState == 1 && gDialogResponse) {
+        }
+    } /*else if (m->actionState == 1 && gDialogResponse) {*/
 //      if (gDialogResponse == 1) {
 //          save_file_do_save(gCurrSaveFileNum - 1);
 //      }

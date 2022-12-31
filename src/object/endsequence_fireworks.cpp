@@ -16,7 +16,13 @@
 
 #include "object/endsequence_fireworks.hpp"
 
+extern "C" {
+#include <libsm64.h>
+#include <decomp/include/sm64shared.h>
+}
+
 #include "object/fireworks.hpp"
+#include "object/player.hpp"
 #include "supertux/screen_manager.hpp"
 #include "supertux/sector.hpp"
 
@@ -47,10 +53,13 @@ void
 EndSequenceFireworks::running(float dt_sec)
 {
   EndSequence::running(dt_sec);
-  //Player& tux = *Sector::get().player;
+  Player& tux = Sector::get().get_player();
 
   if (tux_may_walk) {
-    end_sequence_controller->press(Control::JUMP);
+    if (!tux.is_mario())
+      end_sequence_controller->press(Control::JUMP);
+    else if (tux.m_mario_obj->state.action != ACT_STAR_DANCE_EXIT)
+      sm64_set_mario_action(tux.m_mario_obj->ID(), ACT_STAR_DANCE_EXIT);
   }
 
   if (endsequence_timer.check()) isdone = true;
