@@ -131,6 +131,7 @@ void MarioInstance::update(float tickspeed)
 
     if (m_attacked) m_attacked--;
 
+    // handle MovingObjects
     for (int i=0; i<MAX_MOVINGOBJECTS; i++)
     {
       MarioMovingObject* sm64obj = &loaded_movingobjects[i];
@@ -148,6 +149,24 @@ void MarioInstance::update(float tickspeed)
       }
       sm64_surface_object_move(sm64obj->ID, &sm64obj->transform);
     }
+
+    // water
+    int yadd = 0;
+    int waterY = Sector::get().get_height()+32;
+    for (const auto& solids : Sector::get().get_solid_tilemaps())
+    {
+      bool get_out = false;
+
+      while (m_curr_pos.y/32 - yadd < waterY && solids->get_tile(m_curr_pos.x/32, m_curr_pos.y/32 - yadd).get_attributes() & Tile::WATER)
+      {
+        waterY = m_curr_pos.y/32 - yadd;
+        yadd++;
+        get_out = true;
+      }
+
+      if (get_out) break;
+    }
+    sm64_set_mario_water_level(mario_id, -waterY*32/MARIO_SCALE);
 
     m_last_pos = m_curr_pos;
     memcpy(m_last_geometry_pos, m_curr_geometry_pos, sizeof(m_curr_geometry_pos));

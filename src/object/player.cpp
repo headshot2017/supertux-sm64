@@ -15,13 +15,13 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+#include "object/player.hpp"
+
 #include <boost/format.hpp>
 extern "C" {
 #include <libsm64.h>
-#include <decomp/include/audio_defines.h>
+#include <decomp/include/sm64shared.h>
 }
-
-#include "object/player.hpp"
 
 #include "audio/sound_manager.hpp"
 #include "badguy/badguy.hpp"
@@ -41,7 +41,6 @@ extern "C" {
 #include "object/sprite_particle.hpp"
 #include "sprite/sprite.hpp"
 #include "sprite/sprite_manager.hpp"
-#include "supertux/console.hpp"
 #include "supertux/game_session.hpp"
 #include "supertux/gameconfig.hpp"
 #include "supertux/sector.hpp"
@@ -377,7 +376,7 @@ Player::update(float dt_sec)
   }
   no_water = true;
 
-  if ((m_swimming || m_water_jump) && is_big())
+  if ((m_swimming || m_water_jump) && is_big() && !m_mario)
   {
     m_col.set_size(TUX_WIDTH, TUX_WIDTH);
     adjust_height(TUX_WIDTH);
@@ -413,7 +412,7 @@ Player::update(float dt_sec)
         adjust_height(TUX_WIDTH);
       m_wants_buttjump = m_does_buttjump = m_backflipping = false;
       m_dir = (m_physic.get_velocity_x() > 0) ? Direction::LEFT : Direction::RIGHT;
-      SoundManager::current()->play("sounds/splash.wav");
+      if (!m_mario) SoundManager::current()->play("sounds/splash.wav");
     }
   }
 #endif
@@ -693,6 +692,8 @@ Player::handle_input_swimming()
 void
 Player::swim(float pointx, float pointy, bool boost)
 {
+    if (m_mario) return;
+
     if (m_swimming)
       m_physic.set_gravity_modifier(.0f);
 
@@ -1180,7 +1181,11 @@ Player::handle_input()
 
   if (m_mario)
   {
-    m_mario_obj->input.stickX = m_controller->hold(Control::LEFT) ? 1 : m_controller->hold(Control::RIGHT) ? -1 : 0;
+    if ((m_mario_obj->state.action & ACT_GROUP_MASK) == ACT_GROUP_SUBMERGED) // in the water
+      m_mario_obj->input.stickY = float(m_controller->hold(Control::DOWN)) - float(m_controller->hold(Control::UP));
+    else
+      m_mario_obj->input.stickY = 0;
+    m_mario_obj->input.stickX = float(m_controller->hold(Control::LEFT)) - float(m_controller->hold(Control::RIGHT));
     m_mario_obj->input.buttonA = m_controller->hold(Control::JUMP);
     m_mario_obj->input.buttonB = m_controller->hold(Control::ACTION);
     m_mario_obj->input.buttonZ = m_controller->hold(Control::DOWN);
