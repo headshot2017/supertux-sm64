@@ -167,7 +167,7 @@ void MarioInstance::update(float tickspeed)
       if (get_out)
         break;
     }
-    sm64_set_mario_water_level(mario_id, -waterY*32/MARIO_SCALE);
+    sm64_set_mario_water_level(mario_id, -waterY*32/MARIO_SCALE + 32);
 
     m_last_pos = m_curr_pos;
     memcpy(m_last_geometry_pos, m_curr_geometry_pos, sizeof(m_curr_geometry_pos));
