@@ -251,6 +251,7 @@ Player::~Player()
   ungrab_object();
   if (m_climbing) stop_climbing(*m_climbing);
   if (m_mario_obj) delete m_mario_obj;
+  m_mario_obj = nullptr;
 }
 
 float

@@ -101,6 +101,15 @@ GameSession::reset_level()
 int
 GameSession::restart_level(bool after_death)
 {
+  // hacky solution for mario to delete all blocks and movingobjects from mario instance
+  if (m_currentsector) {
+    Player& tux = m_currentsector->get_player();
+    if (tux.is_mario() && tux.m_mario_obj) {
+      delete tux.m_mario_obj;
+      tux.m_mario_obj = nullptr;
+    }
+  }
+
   const PlayerStatus& currentStatus = m_savegame.get_player_status();
   m_coins_at_start = currentStatus.coins;
   m_bonus_at_start = currentStatus.bonus;
