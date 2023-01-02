@@ -152,19 +152,20 @@ void MarioInstance::update(float tickspeed)
 
     // water
     int yadd = 0;
-    int waterY = Sector::get().get_height()+32;
+    int waterY = (Sector::get().get_height()+256)/32;
     for (const auto& solids : Sector::get().get_solid_tilemaps())
     {
       bool get_out = false;
 
-      while (m_curr_pos.y/32 - yadd < waterY && solids->get_tile(m_curr_pos.x/32, m_curr_pos.y/32 - yadd).get_attributes() & Tile::WATER)
+      while (m_curr_pos.y/32 - yadd < waterY && m_curr_pos.y - yadd*32 >= solids->get_offset().y && solids->get_tile(m_curr_pos.x/32, m_curr_pos.y/32 - yadd).get_attributes() & Tile::WATER)
       {
         waterY = m_curr_pos.y/32 - yadd;
         yadd++;
         get_out = true;
       }
 
-      if (get_out) break;
+      if (get_out)
+        break;
     }
     sm64_set_mario_water_level(mario_id, -waterY*32/MARIO_SCALE);
 
