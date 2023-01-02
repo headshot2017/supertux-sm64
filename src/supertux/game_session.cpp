@@ -386,6 +386,12 @@ GameSession::update(float dt_sec, const Controller& controller)
 
   // respawning in new sector?
   if (!m_newsector.empty() && !m_newspawnpoint.empty()) {
+    if (m_currentsector->get_player().is_mario())
+    {
+      m_currentsector->get_player().m_mario_obj->delete_blocks();
+      m_currentsector->get_player().m_mario_obj->delete_all_movingobjects();
+    }
+
     auto sector = m_level->get_sector(m_newsector);
     if (sector == nullptr) {
       log_warning << "Sector '" << m_newsector << "' not found" << std::endl;
