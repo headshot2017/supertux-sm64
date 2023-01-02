@@ -376,7 +376,7 @@ bool MarioInstance::add_block(int x, int y, int *i, TileMap* solids)
 {
 	if ((*i) >= MAX_SURFACES) return false;
 	const Tile& block = solids->get_tile(x, y);
-	if (!block.is_solid()) return false;
+	if (!block.is_solid() || x*32 < solids->get_offset().x || y*32 < solids->get_offset().y) return false;
 
 	struct SM64SurfaceObject obj;
 	memset(&obj.transform, 0, sizeof(struct SM64ObjectTransform));
@@ -386,10 +386,10 @@ bool MarioInstance::add_block(int x, int y, int *i, TileMap* solids)
 	obj.surfaceCount = 0;
 	obj.surfaces = (struct SM64Surface*)malloc(sizeof(struct SM64Surface) * 4*2);
 
-	bool up =		solids->get_tile(x, y-1).is_solid();
-	bool down =		solids->get_tile(x, y+1).is_solid();
-	bool left =		solids->get_tile(x-1, y).is_solid();
-	bool right =	solids->get_tile(x+1, y).is_solid();
+	bool up =      (y-1)*32 >= solids->get_offset().y && solids->get_tile(x, y-1).is_solid();
+	bool down =    (y+1)*32 >= solids->get_offset().y && solids->get_tile(x, y+1).is_solid();
+	bool left =    (x-1)*32 >= solids->get_offset().x && solids->get_tile(x-1, y).is_solid();
+	bool right =   (x+1)*32 >= solids->get_offset().x && solids->get_tile(x+1, y).is_solid();
 
 	// block ground face
 	if (!up)
