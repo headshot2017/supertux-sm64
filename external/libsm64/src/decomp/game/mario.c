@@ -814,7 +814,7 @@ static u32 set_mario_action_airborne(struct MarioState *m, u32 action, u32 actio
         case ACT_WATER_JUMP:
         case ACT_HOLD_WATER_JUMP:
             if (actionArg == 0) {
-                set_mario_y_vel_based_on_fspeed(m, 42.0f, 0.0f);
+                set_mario_y_vel_based_on_fspeed(m, 50.0f, 0.0f); // originally 42.0f
             }
             break;
 
