@@ -390,6 +390,7 @@ GameSession::update(float dt_sec, const Controller& controller)
     {
       m_currentsector->get_player().m_mario_obj->delete_blocks();
       m_currentsector->get_player().m_mario_obj->delete_all_movingobjects();
+      m_currentsector->get_player().m_mario_obj->delete_all_path_blocks();
     }
 
     auto sector = m_level->get_sector(m_newsector);

@@ -136,6 +136,7 @@ TitleScreen::leave()
   {
     sector.get_player().m_mario_obj->delete_blocks();
     sector.get_player().m_mario_obj->delete_all_movingobjects();
+    sector.get_player().m_mario_obj->delete_all_path_blocks();
   }
 
   MenuManager::instance().clear_menu_stack();

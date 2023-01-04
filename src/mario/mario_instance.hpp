@@ -31,6 +31,18 @@ struct MarioMesh
   uint32_t vao;
 };
 
+struct MarioPathBlock
+{
+  MarioPathBlock() :
+    ID(UINT_MAX),
+    tilemap(nullptr)
+  {}
+
+  uint32_t ID;
+  SM64ObjectTransform transform;
+  TileMap *tilemap;
+};
+
 struct MarioMovingObject
 {
   MarioMovingObject() :
@@ -39,8 +51,8 @@ struct MarioMovingObject
   {}
 
   uint32_t ID;
-  MovingObject* obj;
   SM64ObjectTransform transform;
+  MovingObject* obj;
 };
 
 class MarioInstance
@@ -49,6 +61,7 @@ class MarioInstance
   int mario_id;
   float tick;
   uint32_t loaded_surfaces[MAX_SURFACES];
+  MarioPathBlock loaded_path_surfaces[MAX_SURFACES];
   MarioMovingObject loaded_movingobjects[MAX_MOVINGOBJECTS];
   MarioMesh mesh;
   int m_attacked;
@@ -61,6 +74,7 @@ class MarioInstance
   bool add_block(int x, int y, int *i, TileMap* solids);
   void load_new_blocks(int x, int y);
   void load_all_movingobjects();
+  void load_all_path_blocks();
 
 public:
   MarioInstance(Player* player);
@@ -78,6 +92,7 @@ public:
 
   void delete_blocks();
   void delete_all_movingobjects();
+  void delete_all_path_blocks();
   void set_pos(const Vector& pos);
 
   bool dead() const { return state.health == MARIO_DEAD_HEALTH; }

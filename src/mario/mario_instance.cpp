@@ -68,6 +68,7 @@ void MarioInstance::spawn(float x, float y)
     MarioManager::current()->init_mario(&geometry, &mesh);
 
     load_all_movingobjects();
+    load_all_path_blocks();
 
     // load a static surface way below the level
     uint32_t surfaceCount = 2;
@@ -106,6 +107,7 @@ void MarioInstance::destroy()
   {
     delete_blocks();
     delete_all_movingobjects();
+    delete_all_path_blocks();
 
     sm64_mario_delete(mario_id);
     mario_id = -1;
@@ -130,6 +132,22 @@ void MarioInstance::update(float tickspeed)
     tick -= 1.f/30;
 
     if (m_attacked) m_attacked--;
+
+    // handle path blocks (solid tilemaps with a moving path, like the platforms in The Crystal Mine)
+    for (int i=0; i<MAX_SURFACES; i++)
+    {
+      MarioPathBlock* sm64obj = &loaded_path_surfaces[i];
+      if (sm64obj->ID == UINT_MAX) continue;
+
+      float x = sm64obj->tilemap->get_offset().x / MARIO_SCALE;
+      float y = -sm64obj->tilemap->get_offset().y / MARIO_SCALE;
+      if (sm64obj->transform.position[0] != x || sm64obj->transform.position[1] != y)
+      {
+        sm64obj->transform.position[0] = x;
+        sm64obj->transform.position[1] = y;
+        sm64_surface_object_move(sm64obj->ID, &sm64obj->transform);
+      }
+    }
 
     // handle MovingObjects
     for (int i=0; i<MAX_MOVINGOBJECTS; i++)
@@ -177,7 +195,7 @@ void MarioInstance::update(float tickspeed)
     sm64_mario_tick(mario_id, &input, &state, &geometry);
 
     Vector new_pos(state.position[0]*MARIO_SCALE, -state.position[1]*MARIO_SCALE);
-    if ((int)(new_pos.x/32) != (int)(m_pos.x/32) || (int)(new_pos.y/32) != (int)(m_pos.y/32))
+    //if ((int)(new_pos.x/32) != (int)(m_pos.x/32) || (int)(new_pos.y/32) != (int)(m_pos.y/32))
       load_new_blocks(new_pos.x/32, new_pos.y/32);
 
     new_pos.y += 16;
@@ -362,6 +380,132 @@ void MarioInstance::load_all_movingobjects()
   }
 }
 
+void MarioInstance::delete_all_path_blocks()
+{
+  for (int i=0; i<MAX_SURFACES; i++)
+  {
+    if (loaded_path_surfaces[i].ID == UINT_MAX) continue;
+    sm64_surface_object_delete(loaded_path_surfaces[i].ID);
+    loaded_path_surfaces[i].ID = UINT_MAX;
+    loaded_path_surfaces[i].tilemap = nullptr;
+  }
+}
+
+void MarioInstance::load_all_path_blocks()
+{
+  delete_all_path_blocks();
+
+  for (const auto& solids : Sector::get().get_solid_tilemaps())
+  {
+    if (!solids->get_path()) continue;
+    ConsoleBuffer::output << "path tilemap " << solids->get_offset().x << " " << solids->get_offset().y << " " << solids->get_width() << " " << solids->get_height() << std::endl;
+
+    struct SM64SurfaceObject obj;
+    memset(&obj.transform, 0, sizeof(struct SM64ObjectTransform));
+    obj.transform.position[0] = solids->get_offset().x / MARIO_SCALE;
+    obj.transform.position[1] = -solids->get_offset().y / MARIO_SCALE;
+	obj.surfaceCount = 0;
+	obj.surfaces = nullptr;
+
+    for (int x=0; x<solids->get_width(); x++)
+    {
+      for (int y=0; y<solids->get_height(); y++)
+      {
+        const Tile& block = solids->get_tile(x, y);
+        if (!block.is_solid()) continue;
+
+        bool up =      y-1 >= 0                   && solids->get_tile(x, y-1).is_solid();
+        bool down =    y+1 < solids->get_height() && solids->get_tile(x, y+1).is_solid();
+        bool left =    x-1 >= 0                   && solids->get_tile(x-1, y).is_solid();
+        bool right =   x+1 < solids->get_width()  && solids->get_tile(x+1, y).is_solid();
+        if (up && down && left && right) continue; // at least one side must be free
+
+        int X = (solids->get_offset().x + (x*32 - solids->get_offset().x)) / MARIO_SCALE;
+        int Y = -(solids->get_offset().y + (y*32+16 - solids->get_offset().y)) / MARIO_SCALE;
+
+        // block ground face
+        if (!up)
+        {
+          obj.surfaceCount += 2;
+          obj.surfaces = (struct SM64Surface*)realloc(obj.surfaces, sizeof(struct SM64Surface) * obj.surfaceCount);
+
+          obj.surfaces[obj.surfaceCount-2].vertices[0][0] = X + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-2].vertices[0][1] = Y + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-2].vertices[0][2] = 64 / MARIO_SCALE;
+          obj.surfaces[obj.surfaceCount-2].vertices[1][0] = X;					obj.surfaces[obj.surfaceCount-2].vertices[1][1] = Y + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-2].vertices[1][2] = -64 / MARIO_SCALE;
+          obj.surfaces[obj.surfaceCount-2].vertices[2][0] = X;					obj.surfaces[obj.surfaceCount-2].vertices[2][1] = Y + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-2].vertices[2][2] = 64 / MARIO_SCALE;
+
+          obj.surfaces[obj.surfaceCount-1].vertices[0][0] = X; 					obj.surfaces[obj.surfaceCount-1].vertices[0][1] = Y + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-1].vertices[0][2] = -64 / MARIO_SCALE;
+          obj.surfaces[obj.surfaceCount-1].vertices[1][0] = X + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-1].vertices[1][1] = Y + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-1].vertices[1][2] = 64 / MARIO_SCALE;
+          obj.surfaces[obj.surfaceCount-1].vertices[2][0] = X + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-1].vertices[2][1] = Y + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-1].vertices[2][2] = -64 / MARIO_SCALE;
+        }
+
+        // left (Z+)
+        if (!left)
+        {
+          obj.surfaceCount += 2;
+          obj.surfaces = (struct SM64Surface*)realloc(obj.surfaces, sizeof(struct SM64Surface) * obj.surfaceCount);
+
+          obj.surfaces[obj.surfaceCount-2].vertices[0][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount-2].vertices[0][1] = Y;					obj.surfaces[obj.surfaceCount-2].vertices[0][0] = X;
+          obj.surfaces[obj.surfaceCount-2].vertices[1][2] = 64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount-2].vertices[1][1] = Y + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-2].vertices[1][0] = X;
+          obj.surfaces[obj.surfaceCount-2].vertices[2][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount-2].vertices[2][1] = Y + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-2].vertices[2][0] = X;
+
+          obj.surfaces[obj.surfaceCount-1].vertices[0][2] = 64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount-1].vertices[0][1] = Y + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-1].vertices[0][0] = X;
+          obj.surfaces[obj.surfaceCount-1].vertices[1][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount-1].vertices[1][1] = Y;					obj.surfaces[obj.surfaceCount-1].vertices[1][0] = X;
+          obj.surfaces[obj.surfaceCount-1].vertices[2][2] = 64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount-1].vertices[2][1] = Y;					obj.surfaces[obj.surfaceCount-1].vertices[2][0] = X;
+        }
+
+        // right (Z-)
+        if (!right)
+        {
+          obj.surfaceCount += 2;
+          obj.surfaces = (struct SM64Surface*)realloc(obj.surfaces, sizeof(struct SM64Surface) * obj.surfaceCount);
+
+          obj.surfaces[obj.surfaceCount-2].vertices[0][2] = 64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount-2].vertices[0][1] = Y;					obj.surfaces[obj.surfaceCount-2].vertices[0][0] = X + 32/MARIO_SCALE;
+          obj.surfaces[obj.surfaceCount-2].vertices[1][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount-2].vertices[1][1] = Y + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-2].vertices[1][0] = X + 32/MARIO_SCALE;
+          obj.surfaces[obj.surfaceCount-2].vertices[2][2] = 64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount-2].vertices[2][1] = Y + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-2].vertices[2][0] = X + 32/MARIO_SCALE;
+
+          obj.surfaces[obj.surfaceCount-1].vertices[0][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount-1].vertices[0][1] = Y + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-1].vertices[0][0] = X + 32/MARIO_SCALE;
+          obj.surfaces[obj.surfaceCount-1].vertices[1][2] = 64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount-1].vertices[1][1] = Y;					obj.surfaces[obj.surfaceCount-1].vertices[1][0] = X + 32/MARIO_SCALE;
+          obj.surfaces[obj.surfaceCount-1].vertices[2][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount-1].vertices[2][1] = Y;					obj.surfaces[obj.surfaceCount-1].vertices[2][0] = X + 32/MARIO_SCALE;
+        }
+
+        // block bottom face
+        if (!down)
+        {
+          obj.surfaceCount += 2;
+          obj.surfaces = (struct SM64Surface*)realloc(obj.surfaces, sizeof(struct SM64Surface) * obj.surfaceCount);
+
+          obj.surfaces[obj.surfaceCount-2].vertices[0][0] = X;					obj.surfaces[obj.surfaceCount-2].vertices[0][1] = Y;	obj.surfaces[obj.surfaceCount-2].vertices[0][2] = 64 / MARIO_SCALE;
+          obj.surfaces[obj.surfaceCount-2].vertices[1][0] = X;					obj.surfaces[obj.surfaceCount-2].vertices[1][1] = Y;	obj.surfaces[obj.surfaceCount-2].vertices[1][2] = -64 / MARIO_SCALE;
+          obj.surfaces[obj.surfaceCount-2].vertices[2][0] = X + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-2].vertices[2][1] = Y;	obj.surfaces[obj.surfaceCount-2].vertices[2][2] = 64 / MARIO_SCALE;
+
+          obj.surfaces[obj.surfaceCount-1].vertices[0][0] = X + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-1].vertices[0][1] = Y;	obj.surfaces[obj.surfaceCount-1].vertices[0][2] = -64 / MARIO_SCALE;
+          obj.surfaces[obj.surfaceCount-1].vertices[1][0] = X + 32/MARIO_SCALE;	obj.surfaces[obj.surfaceCount-1].vertices[1][1] = Y;	obj.surfaces[obj.surfaceCount-1].vertices[1][2] = 64 / MARIO_SCALE;
+          obj.surfaces[obj.surfaceCount-1].vertices[2][0] = X;					obj.surfaces[obj.surfaceCount-1].vertices[2][1] = Y;	obj.surfaces[obj.surfaceCount-1].vertices[2][2] = -64 / MARIO_SCALE;
+        }
+      }
+    }
+
+    for (uint32_t ind=0; ind<obj.surfaceCount; ind++)
+    {
+      obj.surfaces[ind].type = SURFACE_DEFAULT;
+      obj.surfaces[ind].force = 0;
+      obj.surfaces[ind].terrain = TERRAIN_STONE;
+    }
+
+    for (int ind=0; ind<MAX_SURFACES; ind++)
+    {
+      if (loaded_path_surfaces[ind].ID != UINT_MAX) continue;
+
+      loaded_path_surfaces[ind].ID = sm64_surface_object_create(&obj);
+      loaded_path_surfaces[ind].transform = obj.transform;
+      loaded_path_surfaces[ind].tilemap = solids;
+      break;
+    }
+
+    if (obj.surfaces) free(obj.surfaces);
+  }
+}
+
 void MarioInstance::delete_blocks()
 {
   for (int i=0; i<MAX_SURFACES; i++)
@@ -374,90 +518,92 @@ void MarioInstance::delete_blocks()
 
 bool MarioInstance::add_block(int x, int y, int *i, TileMap* solids)
 {
-	if ((*i) >= MAX_SURFACES) return false;
-	const Tile& block = solids->get_tile(x, y);
-	if (!block.is_solid() || x*32 < solids->get_offset().x || y*32 < solids->get_offset().y) return false;
+  if ((*i) >= MAX_SURFACES || solids->is_outside_bounds(Vector(x*32, y*32))) return false;
+  int offsetX = solids->get_offset().x/32;
+  int offsetY = solids->get_offset().y/32;
+  const Tile& block = solids->get_tile(x - offsetX, y - offsetY);
+  if (!block.is_solid()) return false;
 
-	struct SM64SurfaceObject obj;
-	memset(&obj.transform, 0, sizeof(struct SM64ObjectTransform));
-	obj.transform.position[0] = x*32 / MARIO_SCALE;
-	obj.transform.position[1] = (-y*32-16) / MARIO_SCALE;
-	obj.transform.position[2] = 0;
-	obj.surfaceCount = 0;
-	obj.surfaces = (struct SM64Surface*)malloc(sizeof(struct SM64Surface) * 4*2);
+  struct SM64SurfaceObject obj;
+  memset(&obj.transform, 0, sizeof(struct SM64ObjectTransform));
+  obj.transform.position[0] = (solids->get_offset().x + (x*32 - solids->get_offset().x)) / MARIO_SCALE;
+  obj.transform.position[1] = -(solids->get_offset().y + (y*32+16 - solids->get_offset().y)) / MARIO_SCALE;
+  obj.transform.position[2] = 0;
+  obj.surfaceCount = 0;
+  obj.surfaces = (struct SM64Surface*)malloc(sizeof(struct SM64Surface) * 4*2);
 
-	bool up =      (y-1)*32 >= solids->get_offset().y && solids->get_tile(x, y-1).is_solid();
-	bool down =    (y+1)*32 >= solids->get_offset().y && solids->get_tile(x, y+1).is_solid();
-	bool left =    (x-1)*32 >= solids->get_offset().x && solids->get_tile(x-1, y).is_solid();
-	bool right =   (x+1)*32 >= solids->get_offset().x && solids->get_tile(x+1, y).is_solid();
+  bool up =      !solids->is_outside_bounds(Vector(x*32, y*32-32)) && solids->get_tile(x - offsetX, y-1 - offsetY).is_solid();
+  bool down =    !solids->is_outside_bounds(Vector(x*32, y*32+32)) && solids->get_tile(x - offsetX, y+1 - offsetY).is_solid();
+  bool left =    !solids->is_outside_bounds(Vector(x*32-32, y*32)) && solids->get_tile(x-1 - offsetX, y - offsetY).is_solid();
+  bool right =   !solids->is_outside_bounds(Vector(x*32+32, y*32)) && solids->get_tile(x+1 - offsetX, y - offsetY).is_solid();
 
-	// block ground face
-	if (!up)
-	{
-		obj.surfaces[obj.surfaceCount+0].vertices[0][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][2] = 64 / MARIO_SCALE;
-		obj.surfaces[obj.surfaceCount+0].vertices[1][0] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][2] = -64 / MARIO_SCALE;
-		obj.surfaces[obj.surfaceCount+0].vertices[2][0] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][2] = 64 / MARIO_SCALE;
+  // block ground face
+  if (!up)
+  {
+    obj.surfaces[obj.surfaceCount+0].vertices[0][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][2] = 64 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+0].vertices[1][0] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][2] = -64 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+0].vertices[2][0] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][2] = 64 / MARIO_SCALE;
 
-		obj.surfaces[obj.surfaceCount+1].vertices[0][0] = 0 / MARIO_SCALE; 		obj.surfaces[obj.surfaceCount+1].vertices[0][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][2] = -64 / MARIO_SCALE;
-		obj.surfaces[obj.surfaceCount+1].vertices[1][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][2] = 64 / MARIO_SCALE;
-		obj.surfaces[obj.surfaceCount+1].vertices[2][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][2] = -64 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+1].vertices[0][0] = 0 / MARIO_SCALE; 		obj.surfaces[obj.surfaceCount+1].vertices[0][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][2] = -64 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+1].vertices[1][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][2] = 64 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+1].vertices[2][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][2] = -64 / MARIO_SCALE;
 
-		obj.surfaceCount += 2;
-	}
+    obj.surfaceCount += 2;
+  }
 
-	// left (Z+)
-	if (!left)
-	{
-		obj.surfaces[obj.surfaceCount+0].vertices[0][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+0].vertices[0][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][0] = 0 / MARIO_SCALE;
-		obj.surfaces[obj.surfaceCount+0].vertices[1][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][0] = 0 / MARIO_SCALE;
-		obj.surfaces[obj.surfaceCount+0].vertices[2][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+0].vertices[2][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][0] = 0 / MARIO_SCALE;
+  // left (Z+)
+  if (!left)
+  {
+    obj.surfaces[obj.surfaceCount+0].vertices[0][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+0].vertices[0][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][0] = 0 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+0].vertices[1][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][0] = 0 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+0].vertices[2][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+0].vertices[2][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][0] = 0 / MARIO_SCALE;
 
-		obj.surfaces[obj.surfaceCount+1].vertices[0][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][0] = 0 / MARIO_SCALE;
-		obj.surfaces[obj.surfaceCount+1].vertices[1][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+1].vertices[1][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][0] = 0 / MARIO_SCALE;
-		obj.surfaces[obj.surfaceCount+1].vertices[2][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][0] = 0 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+1].vertices[0][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][0] = 0 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+1].vertices[1][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+1].vertices[1][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][0] = 0 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+1].vertices[2][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][0] = 0 / MARIO_SCALE;
 
-		obj.surfaceCount += 2;
-	}
+    obj.surfaceCount += 2;
+  }
 
-	// right (Z-)
-	if (!right)
-	{
-		obj.surfaces[obj.surfaceCount+0].vertices[0][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][0] = 32 / MARIO_SCALE;
-		obj.surfaces[obj.surfaceCount+0].vertices[1][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+0].vertices[1][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][0] = 32 / MARIO_SCALE;
-		obj.surfaces[obj.surfaceCount+0].vertices[2][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][0] = 32 / MARIO_SCALE;
+  // right (Z-)
+  if (!right)
+  {
+    obj.surfaces[obj.surfaceCount+0].vertices[0][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][0] = 32 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+0].vertices[1][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+0].vertices[1][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][0] = 32 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+0].vertices[2][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][0] = 32 / MARIO_SCALE;
 
-		obj.surfaces[obj.surfaceCount+1].vertices[0][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+1].vertices[0][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][0] = 32 / MARIO_SCALE;
-		obj.surfaces[obj.surfaceCount+1].vertices[1][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][0] = 32 / MARIO_SCALE;
-		obj.surfaces[obj.surfaceCount+1].vertices[2][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+1].vertices[2][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][0] = 32 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+1].vertices[0][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+1].vertices[0][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][0] = 32 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+1].vertices[1][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][0] = 32 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+1].vertices[2][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+1].vertices[2][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][0] = 32 / MARIO_SCALE;
 
-		obj.surfaceCount += 2;
-	}
+    obj.surfaceCount += 2;
+  }
 
-	// block bottom face
-	if (!down)
-	{
-		obj.surfaces[obj.surfaceCount+0].vertices[0][0] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][2] = 64 / MARIO_SCALE;
-		obj.surfaces[obj.surfaceCount+0].vertices[1][0] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][2] = -64 / MARIO_SCALE;
-		obj.surfaces[obj.surfaceCount+0].vertices[2][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][2] = 64 / MARIO_SCALE;
+  // block bottom face
+  if (!down)
+  {
+    obj.surfaces[obj.surfaceCount+0].vertices[0][0] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][2] = 64 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+0].vertices[1][0] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][2] = -64 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+0].vertices[2][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][2] = 64 / MARIO_SCALE;
 
-		obj.surfaces[obj.surfaceCount+1].vertices[0][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][2] = -64 / MARIO_SCALE;
-		obj.surfaces[obj.surfaceCount+1].vertices[1][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][2] = 64 / MARIO_SCALE;
-		obj.surfaces[obj.surfaceCount+1].vertices[2][0] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][2] = -64 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+1].vertices[0][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][2] = -64 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+1].vertices[1][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][2] = 64 / MARIO_SCALE;
+    obj.surfaces[obj.surfaceCount+1].vertices[2][0] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][2] = -64 / MARIO_SCALE;
 
-		obj.surfaceCount += 2;
-	}
+    obj.surfaceCount += 2;
+  }
 
-	for (uint32_t ind=0; ind<obj.surfaceCount; ind++)
-	{
-		obj.surfaces[ind].type = SURFACE_DEFAULT;
-		obj.surfaces[ind].force = 0;
-		obj.surfaces[ind].terrain = TERRAIN_STONE;
-	}
+  for (uint32_t ind=0; ind<obj.surfaceCount; ind++)
+  {
+    obj.surfaces[ind].type = SURFACE_DEFAULT;
+    obj.surfaces[ind].force = 0;
+    obj.surfaces[ind].terrain = TERRAIN_STONE;
+  }
 
-	if (obj.surfaceCount)
-		loaded_surfaces[(*i)++] = sm64_surface_object_create(&obj);
+  if (obj.surfaceCount)
+    loaded_surfaces[(*i)++] = sm64_surface_object_create(&obj);
 
-	free(obj.surfaces);
+  free(obj.surfaces);
   return true;
 }
 
@@ -469,6 +615,8 @@ void MarioInstance::load_new_blocks(int x, int y)
 
   for (const auto& solids : Sector::get().get_solid_tilemaps())
   {
+    if (solids->get_path()) continue;
+
     for (int xadd=-7; xadd<=7; xadd++)
     {
       // get block at floor
