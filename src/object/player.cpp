@@ -620,7 +620,7 @@ Player::update(float dt_sec)
     if (!m_deactivated)
     {
       set_pos(m_mario_obj->get_pos() - Vector(m_col.m_bbox.get_width() / 2.f, m_col.m_bbox.get_height()-8), true);
-      m_physic.set_velocity(Vector(0));
+      m_physic.set_velocity(Vector(m_mario_obj->state.velocity[0], -m_mario_obj->state.velocity[1]));
     }
     else
     {
