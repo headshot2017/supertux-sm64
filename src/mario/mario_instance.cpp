@@ -80,7 +80,7 @@ void MarioInstance::spawn(float x, float y)
       surfaces[i].force = 0;
       surfaces[i].terrain = TERRAIN_STONE;
     }
-	
+
     int width = Sector::get().get_width()/2 / MARIO_SCALE;
     int spawnX = width;
     int spawnY = (Sector::get().get_height()+256) / -MARIO_SCALE;
@@ -195,7 +195,7 @@ void MarioInstance::update(float tickspeed)
     sm64_mario_tick(mario_id, &input, &state, &geometry);
 
     Vector new_pos(state.position[0]*MARIO_SCALE, -state.position[1]*MARIO_SCALE);
-    //if ((int)(new_pos.x/32) != (int)(m_pos.x/32) || (int)(new_pos.y/32) != (int)(m_pos.y/32))
+    if ((int)(new_pos.x/32) != (int)(m_pos.x/32) || (int)(new_pos.y/32) != (int)(m_pos.y/32))
       load_new_blocks(new_pos.x/32, new_pos.y/32);
 
     new_pos.y += 16;
