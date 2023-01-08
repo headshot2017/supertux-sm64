@@ -55,20 +55,21 @@ VideoSystem::create(VideoSystem::Enum video_system)
   #else
       try
       {
-        return std::make_unique<GLVideoSystem>(true);
+        return std::make_unique<GLVideoSystem>(false); // false by default for mario
       }
       catch(std::exception& err)
       {
+        /*
         try
         {
           log_warning << "Error creating GLVideoSystem-330core, using GLVideoSystem-20 fallback: "  << err.what() << std::endl;
           return std::make_unique<GLVideoSystem>(false);
         }
         catch(std::exception& err2)
-        {
-          log_warning << "Error creating GLVideoSystem-20, using SDL fallback: "  << err2.what() << std::endl;
+        {*/
+          log_warning << "Error creating GLVideoSystem-20, using SDL fallback: "  << err.what() << std::endl;
           return std::make_unique<SDLVideoSystem>();
-        }
+        //}
       }
   #endif
 #else
