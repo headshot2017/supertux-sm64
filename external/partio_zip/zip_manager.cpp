@@ -47,6 +47,7 @@ extern "C"{
 #include <stdexcept>
 #include <cstring>
 #include <string>
+#include <memory>
 
 #include "zip_manager.hpp"
 
