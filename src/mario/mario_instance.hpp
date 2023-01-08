@@ -90,6 +90,7 @@ public:
   void kill(bool falling_sfx = false);
   void heal(uint8_t amount);
 
+  void reload_collision();
   void delete_blocks();
   void delete_all_movingobjects();
   void delete_all_path_blocks();

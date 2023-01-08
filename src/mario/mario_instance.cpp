@@ -283,6 +283,19 @@ void MarioInstance::heal(uint8_t amount)
   sm64_mario_heal(mario_id, amount);
 }
 
+void MarioInstance::reload_collision()
+{
+  if (!spawned()) return;
+
+  delete_blocks();
+  delete_all_movingobjects();
+  delete_all_path_blocks();
+
+  load_new_blocks(m_pos.x/32, m_pos.y/32);
+  load_all_movingobjects();
+  load_all_path_blocks();
+}
+
 void MarioInstance::set_pos(const Vector& pos)
 {
   if (!spawned() || pos.x <= 0 || pos.y <= 0 || pos.x >= Sector::get().get_width() || pos.y >= Sector::get().get_height())
