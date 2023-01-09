@@ -22,6 +22,7 @@ extern "C" {
 #include "math/rectf.hpp"
 #include "object/camera.hpp"
 #include "object/player.hpp"
+#include "object/sprite_particle.hpp"
 #include "supertux/console.hpp"
 #include "supertux/sector.hpp"
 #include "video/canvas.hpp"
@@ -220,6 +221,18 @@ void MarioInstance::update(float tickspeed)
         if (sm64_mario_attack(mario_id, enemy->get_pos().x / MARIO_SCALE, enemy->get_pos().y / -MARIO_SCALE, 0, 0))
           enemy->kill_fall();
       }
+    }
+
+    // particles
+	if (state.particleFlags & PARTICLE_FIRE)
+    {
+      Vector ppos = get_pos() + Vector(0, -16);
+      Vector pspeed = Vector(0, -50);
+      Vector paccel = Vector(0);
+      Sector::get().add<SpriteParticle>("images/particles/smoke.sprite",
+                                         "default", ppos, ANCHOR_MIDDLE,
+                                         pspeed, paccel,
+                                         LAYER_BACKGROUNDTILES+2);
     }
 
     m_last_pos = m_curr_pos;
