@@ -16,6 +16,10 @@
 
 #include "badguy/badguy.hpp"
 
+extern "C" {
+#include <decomp/include/sm64shared.h>
+}
+
 #include "audio/sound_manager.hpp"
 #include "badguy/dispenser.hpp"
 #include "editor/editor.hpp"
@@ -435,7 +439,9 @@ BadGuy::collision_player(Player& player, const CollisionHit& )
     //unfreeze();
     return FORCE_MOVE;
 
-  player.kill(false, 1, get_pos());
+  if (!player.is_mario() || !(player.m_mario_obj->state.action & ACT_FLAG_ATTACKING))
+    player.kill(false, 1, get_pos());
+
   return FORCE_MOVE;
 }
 

@@ -11,6 +11,10 @@ extern "C" {
 #include <decomp/include/surface_terrains.h>
 }
 
+#include "badguy/badguy.hpp"
+#include "badguy/stalactite.hpp"
+#include "badguy/spiky.hpp"
+#include "badguy/jumpy.hpp"
 #include "mario/mario_manager.hpp"
 #include "math/rect.hpp"
 #include "math/rectf.hpp"
@@ -186,6 +190,34 @@ void MarioInstance::update(float tickspeed)
         break;
     }
     sm64_set_mario_water_level(mario_id, -waterY*32/MARIO_SCALE + 32);
+
+    // attack enemies with punches, kicks or dives
+    // make flame enemies burn mario
+    if (state.action & ACT_FLAG_ATTACKING)
+    {
+      for (MovingObject* obj : Sector::get().get_nearby_objects(m_curr_pos, 40))
+      {
+        BadGuy* enemy = dynamic_cast<BadGuy*>(obj);
+        if (!enemy) continue;
+
+        // do not let mario attack these objects
+        Stalactite* ignore1 = dynamic_cast<Stalactite*>(enemy);
+        if (ignore1) continue;
+
+        // do not let mario jump on these enemies' heads
+        // ugly solution but it'll do...
+        Spiky* ignore2 = dynamic_cast<Spiky*>(enemy);
+        Jumpy* ignore3 = dynamic_cast<Jumpy*>(enemy);
+        if ((ignore2 || ignore3) &&
+            !(state.action & ACT_FLAG_BUTT_OR_STOMACH_SLIDE) && state.action != ACT_DIVE_SLIDE && state.action != ACT_PUNCHING &&
+              state.action != ACT_MOVE_PUNCHING && state.action != ACT_CROUCH_SLIDE && state.action != ACT_SLIDE_KICK_SLIDE &&
+              state.action != ACT_DIVE && state.action != ACT_SLIDE_KICK && state.action != ACT_JUMP_KICK)
+          continue;
+
+        if (sm64_mario_attack(mario_id, enemy->get_pos().x / MARIO_SCALE, enemy->get_pos().y / -MARIO_SCALE, 0, 0))
+          enemy->kill_fall();
+      }
+    }
 
     m_last_pos = m_curr_pos;
     memcpy(m_last_geometry_pos, m_curr_geometry_pos, sizeof(m_curr_geometry_pos));
