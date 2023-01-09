@@ -53,6 +53,17 @@ LiveFire::collision_badguy(BadGuy& badguy, const CollisionHit& hit)
   return WalkingBadguy::collision_badguy(badguy, hit);
 }
 
+HitResponse
+LiveFire::collision_player(Player& player, const CollisionHit& hit)
+{
+  if (player.is_mario())
+  {
+    player.m_mario_obj->burn();
+    return FORCE_MOVE;
+  }
+  return WalkingBadguy::collision_player(player, hit);
+}
+
 void
 LiveFire::active_update(float dt_sec) {
 

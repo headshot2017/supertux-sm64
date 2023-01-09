@@ -15,6 +15,8 @@ extern "C" {
 #include "badguy/stalactite.hpp"
 #include "badguy/spiky.hpp"
 #include "badguy/jumpy.hpp"
+#include "badguy/igel.hpp"
+#include "badguy/livefire.hpp"
 #include "mario/mario_manager.hpp"
 #include "math/rect.hpp"
 #include "math/rectf.hpp"
@@ -192,7 +194,6 @@ void MarioInstance::update(float tickspeed)
     sm64_set_mario_water_level(mario_id, -waterY*32/MARIO_SCALE + 32);
 
     // attack enemies with punches, kicks or dives
-    // make flame enemies burn mario
     if (state.action & ACT_FLAG_ATTACKING)
     {
       for (MovingObject* obj : Sector::get().get_nearby_objects(m_curr_pos, 40))
@@ -202,13 +203,15 @@ void MarioInstance::update(float tickspeed)
 
         // do not let mario attack these objects
         Stalactite* ignore1 = dynamic_cast<Stalactite*>(enemy);
-        if (ignore1) continue;
+        LiveFire* ignore2 = dynamic_cast<LiveFire*>(enemy);
+        if (ignore1 || ignore2) continue;
 
         // do not let mario jump on these enemies' heads
         // ugly solution but it'll do...
-        Spiky* ignore2 = dynamic_cast<Spiky*>(enemy);
-        Jumpy* ignore3 = dynamic_cast<Jumpy*>(enemy);
-        if ((ignore2 || ignore3) &&
+        Spiky* ignore3 = dynamic_cast<Spiky*>(enemy);
+        Jumpy* ignore4 = dynamic_cast<Jumpy*>(enemy);
+        Igel* ignore5 = dynamic_cast<Igel*>(enemy);
+        if ((ignore3 || ignore4 || ignore5) &&
             !(state.action & ACT_FLAG_BUTT_OR_STOMACH_SLIDE) && state.action != ACT_DIVE_SLIDE && state.action != ACT_PUNCHING &&
               state.action != ACT_MOVE_PUNCHING && state.action != ACT_CROUCH_SLIDE && state.action != ACT_SLIDE_KICK_SLIDE &&
               state.action != ACT_DIVE && state.action != ACT_SLIDE_KICK && state.action != ACT_JUMP_KICK)
@@ -313,6 +316,13 @@ void MarioInstance::heal(uint8_t amount)
 {
   if (!spawned()) return;
   sm64_mario_heal(mario_id, amount);
+}
+
+void MarioInstance::burn()
+{
+  if (!spawned() || state.action & ACT_FLAG_INVULNERABLE || m_attacked) return;
+  sm64_set_mario_action_arg(mario_id, ACT_BURNING_JUMP, 1);
+  sm64_play_sound_global(SOUND_MARIO_ON_FIRE);
 }
 
 void MarioInstance::reload_collision()

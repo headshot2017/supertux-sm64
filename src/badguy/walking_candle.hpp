@@ -31,6 +31,7 @@ public:
   virtual void unfreeze() override;
 
   virtual HitResponse collision(GameObject& other, const CollisionHit& hit) override;
+  virtual bool collision_squished(GameObject& object) override; // added for Mario
 
   virtual void kill_fall() override {}
 

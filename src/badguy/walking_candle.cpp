@@ -17,6 +17,7 @@
 #include "badguy/walking_candle.hpp"
 
 #include "object/lantern.hpp"
+#include "object/player.hpp"
 #include "sprite/sprite.hpp"
 #include "util/reader_mapping.hpp"
 
@@ -72,6 +73,15 @@ WalkingCandle::collision(GameObject& other, const CollisionHit& hit) {
     return FORCE_MOVE;
   }
   return WalkingBadguy::collision(other, hit);
+}
+
+bool
+WalkingCandle::collision_squished(GameObject& object)
+{
+  auto player = dynamic_cast<Player*>(&object);
+  if (player && player->is_mario())
+    player->m_mario_obj->burn();
+  return WalkingBadguy::collision_squished(object);
 }
 
 ObjectSettings

@@ -89,6 +89,7 @@ public:
   void hurt(uint32_t damage, Vector& src);
   void kill(bool falling_sfx = false);
   void heal(uint8_t amount);
+  void burn();
 
   void reload_collision();
   void delete_blocks();
