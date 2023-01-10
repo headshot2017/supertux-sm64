@@ -590,7 +590,8 @@ bool MarioInstance::add_block(int x, int y, int *i, TileMap* solids)
   int offsetX = solids->get_offset().x/32;
   int offsetY = solids->get_offset().y/32;
   const Tile& block = solids->get_tile(x - offsetX, y - offsetY);
-  if (!block.is_solid()) return false;
+  bool lava = (block.get_attributes() & Tile::WATER) && (block.get_attributes() & Tile::HURTS) && (block.get_attributes() & Tile::FIRE);
+  if (!block.is_solid() && !lava) return false;
 
   struct SM64SurfaceObject obj;
   memset(&obj.transform, 0, sizeof(struct SM64ObjectTransform));
@@ -663,7 +664,7 @@ bool MarioInstance::add_block(int x, int y, int *i, TileMap* solids)
 
   for (uint32_t ind=0; ind<obj.surfaceCount; ind++)
   {
-    obj.surfaces[ind].type = SURFACE_DEFAULT;
+    obj.surfaces[ind].type = lava ? SURFACE_BURNING : SURFACE_DEFAULT;
     obj.surfaces[ind].force = 0;
     obj.surfaces[ind].terrain = TERRAIN_STONE;
   }
