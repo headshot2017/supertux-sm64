@@ -16,6 +16,10 @@
 
 #include "object/trampoline.hpp"
 
+extern "C" {
+#include <decomp/include/sm64shared.h>
+}
+
 #include "audio/sound_manager.hpp"
 #include "badguy/walking_badguy.hpp"
 #include "control/controller.hpp"
@@ -93,6 +97,8 @@ Trampoline::collision(GameObject& other, const CollisionHit& hit)
         else
           vy = player->get_controller().hold(Control::JUMP) ? VY_MIN - 300 : VY_INITIAL - 40;
         player->get_physic().set_velocity_y(vy);
+        if (player->is_mario() && player->m_mario_obj->state.action != ACT_GROUND_POUND)
+          player->m_mario_obj->set_velocity(Vector(0.f, vy/25));
         SoundManager::current()->play(TRAMPOLINE_SOUND);
         m_sprite->set_action("swinging", 1);
         return FORCE_MOVE;

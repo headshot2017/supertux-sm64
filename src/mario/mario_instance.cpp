@@ -359,6 +359,16 @@ void MarioInstance::set_pos(const Vector& pos)
   sm64_set_mario_position(mario_id, pos.x/MARIO_SCALE, -pos.y/MARIO_SCALE, 0);
 }
 
+void MarioInstance::set_velocity(const Vector& vel)
+{
+  if (!spawned())
+    return;
+
+  sm64_set_mario_velocity(mario_id, vel.x/MARIO_SCALE, -vel.y/MARIO_SCALE, 0);
+  state.velocity[0] = vel.x/MARIO_SCALE;
+  state.velocity[1] = -vel.y/MARIO_SCALE;
+}
+
 void MarioInstance::delete_all_movingobjects()
 {
   for (int i=0; i<MAX_MOVINGOBJECTS; i++)
