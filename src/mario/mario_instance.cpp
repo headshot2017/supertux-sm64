@@ -491,7 +491,6 @@ void MarioInstance::load_all_path_blocks()
   for (const auto& solids : Sector::get().get_solid_tilemaps())
   {
     if (!solids->get_path()) continue;
-    ConsoleBuffer::output << "path tilemap " << solids->get_offset().x << " " << solids->get_offset().y << " " << solids->get_width() << " " << solids->get_height() << std::endl;
 
     struct SM64SurfaceObject obj;
     memset(&obj.transform, 0, sizeof(struct SM64ObjectTransform));
