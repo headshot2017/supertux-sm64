@@ -21,6 +21,7 @@
 extern "C" {
 #include <libsm64.h>
 #include <decomp/include/sm64shared.h>
+#include <decomp/include/audio_defines.h>
 }
 
 #include "audio/sound_manager.hpp"
@@ -535,7 +536,10 @@ Player::update(float dt_sec)
 
   if (m_second_growup_sound_timer.check())
   {
-    SoundManager::current()->play("sounds/grow.wav");
+    if (is_mario())
+      sm64_play_sound_global(SOUND_MARIO_HAHA);
+    else
+      SoundManager::current()->play("sounds/grow.wav");
     m_second_growup_sound_timer.stop();
   }
 

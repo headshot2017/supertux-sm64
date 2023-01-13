@@ -233,7 +233,8 @@ BonusBlock::collision(GameObject& other, const CollisionHit& hit_)
   auto player = dynamic_cast<Player*> (&other);
   if (player) {
     if (player->m_does_buttjump ||
-      (player->is_swimboosting() && player->get_bbox().get_bottom() < m_col.m_bbox.get_top() + SHIFT_DELTA))
+      (player->is_swimboosting() && player->get_bbox().get_bottom() < m_col.m_bbox.get_top() + SHIFT_DELTA) ||
+      (player->is_mario() && player->m_mario_obj->state.action == ACT_GROUND_POUND_LAND && m_sprite->get_action() != "empty"))
     {
       try_drop(player);
     }

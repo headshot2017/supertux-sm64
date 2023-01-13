@@ -95,7 +95,7 @@ InfoBlock::collision(GameObject& other, const CollisionHit& hit_)
   auto player = dynamic_cast<Player*> (&other);
   if (player)
   {
-    if (player->m_does_buttjump)
+    if (player->m_does_buttjump || (player->is_mario() && player->m_mario_obj->state.action == ACT_GROUND_POUND_LAND && m_dest_pct != 1))
       InfoBlock::hit(*player);
   }
   return Block::collision(other, hit_);

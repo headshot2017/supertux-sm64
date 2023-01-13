@@ -19,6 +19,7 @@
 #include "audio/sound_manager.hpp"
 #include "badguy/badguy.hpp"
 #include "badguy/icecrusher.hpp"
+#include "mario/mario_instance.hpp"
 #include "object/bouncy_coin.hpp"
 #include "object/explosion.hpp"
 #include "object/player.hpp"
@@ -69,6 +70,7 @@ Brick::collision(GameObject& other, const CollisionHit& hit_)
   if (player) {
     if (player->m_does_buttjump) try_break(player);
     if (player->is_stone() && player->get_velocity().y >= 280) try_break(player); // stoneform breaks through bricks
+    if (player->is_mario() && player->m_mario_obj->state.action == ACT_GROUND_POUND && !m_breaking) try_break(player);
   }
 
   auto badguy = dynamic_cast<BadGuy*> (&other);

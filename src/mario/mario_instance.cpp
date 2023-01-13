@@ -20,6 +20,7 @@ extern "C" {
 #include "mario/mario_manager.hpp"
 #include "math/rect.hpp"
 #include "math/rectf.hpp"
+#include "object/brick.hpp"
 #include "object/camera.hpp"
 #include "object/player.hpp"
 #include "object/sprite_particle.hpp"
@@ -160,9 +161,19 @@ void MarioInstance::update(float tickspeed)
     for (int i=0; i<MAX_MOVINGOBJECTS; i++)
     {
       MarioMovingObject* sm64obj = &loaded_movingobjects[i];
-      if (sm64obj->ID == UINT_MAX) continue;
+      if (sm64obj->ID == UINT_MAX || !sm64obj->obj) continue;
 
-      if (sm64obj->obj->get_group() == COLGROUP_DISABLED)
+      if (!sm64obj->obj->is_valid())
+      {
+        sm64obj->obj = nullptr;
+        sm64obj->transform.position[2] = 256;
+        sm64_surface_object_move(sm64obj->ID, &sm64obj->transform);
+        continue;
+      }
+
+      Brick* brick = dynamic_cast<Brick*>(sm64obj->obj);
+
+      if (sm64obj->obj->get_group() == COLGROUP_DISABLED || (brick && state.action == ACT_GROUND_POUND))
         sm64obj->transform.position[2] = 256; // make it out of reach
       else
       {
