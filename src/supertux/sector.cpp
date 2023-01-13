@@ -228,7 +228,7 @@ Sector::activate(const Vector& player_pos)
       player.move(player_pos);
     }
 
-    if (player.is_mario()) player.m_mario_obj->spawn(player_pos.x, player_pos.y);
+    if (player.is_mario()) player.m_mario_obj->spawn(player_pos.x + player.get_bbox().get_width()/2 - 2, player_pos.y+40);
 
     // spawning tux in the ground would kill him
     if (!player.is_mario() && !is_free_of_tiles(player.get_bbox())) {

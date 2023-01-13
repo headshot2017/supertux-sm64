@@ -2113,7 +2113,7 @@ Player::set_pos(const Vector& pos, bool tuxToMario)
   m_col.set_pos(pos);
 
   if (m_mario && m_mario_obj->spawned() && !tuxToMario)
-    m_mario_obj->set_pos(Vector(get_pos().x, get_pos().y+40));
+    m_mario_obj->set_pos(Vector(get_pos().x + m_col.m_bbox.get_width()/2 - 2, get_pos().y+40));
 }
 
 void
