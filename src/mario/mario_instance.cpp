@@ -57,6 +57,10 @@ void MarioInstance::spawn(float x, float y)
   //    sm64 -> supertux: multiply
   int spawnX = x / MARIO_SCALE;
   int spawnY = -y / MARIO_SCALE;
+  m_last_pos = m_curr_pos = m_pos = Vector(x, y);
+  state.position[0] = spawnX;
+  state.position[1] = spawnY;
+  state.position[2] = 0;
 
   //exportMap(spawnX, spawnY);
 
