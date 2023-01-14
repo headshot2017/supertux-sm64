@@ -54,6 +54,8 @@ struct SM64MarioState
 	uint32_t flags;
 	uint32_t particleFlags;
 	int16_t invincTimer;
+	bool holdingObject;
+	uint8_t dropMethod;
 };
 
 struct SM64MarioGeometryBuffers
