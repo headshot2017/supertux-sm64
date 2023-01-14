@@ -591,7 +591,7 @@ SM64_LIB_FN void sm64_mario_heal(int32_t marioId, uint8_t healCounter)
 	if (gMarioState->health < MARIO_FULL_HEALTH)
 	{
 		play_sound(SOUND_MENU_POWER_METER, gMarioState->marioObj->header.gfx.cameraToObject);
-		gMarioState->health += healCounter * 272;
+		gMarioState->health += healCounter << 8;
 		if (gMarioState->health > MARIO_FULL_HEALTH) gMarioState->health = MARIO_FULL_HEALTH;
 	}
 }
