@@ -42,6 +42,7 @@ extern "C" {
 #include "object/sprite_particle.hpp"
 #include "sprite/sprite.hpp"
 #include "sprite/sprite_manager.hpp"
+#include "supertux/console.hpp"
 #include "supertux/game_session.hpp"
 #include "supertux/gameconfig.hpp"
 #include "supertux/sector.hpp"
@@ -620,6 +621,7 @@ Player::update(float dt_sec)
 
   if (m_mario) {
     m_mario_obj->update(dt_sec);
+    m_dir = (m_mario_obj->state.faceAngle > 0 && m_mario_obj->state.faceAngle < math::PI) ? Direction::RIGHT : Direction::LEFT;
 
     if (!m_deactivated)
     {
@@ -1194,6 +1196,7 @@ Player::handle_input()
     m_mario_obj->input.buttonA = m_controller->hold(Control::JUMP);
     m_mario_obj->input.buttonB = m_controller->hold(Control::ACTION);
     m_mario_obj->input.buttonZ = m_controller->hold(Control::DOWN);
+    try_grab();
     return;
   }
 
@@ -1415,6 +1418,50 @@ Player::position_grabbed_object()
 void
 Player::try_grab()
 {
+  if (is_mario())
+  {
+    if (m_grabbed_object && !m_mario_obj->state.holdingObject)
+      ungrab_object();
+    else if (!m_grabbed_object && !m_swimming)
+    {
+      Vector pos(0);
+      if (m_dir == Direction::LEFT)
+        pos = Vector(m_col.m_bbox.get_left() - 5, m_col.m_bbox.get_bottom() - 16);
+      else
+        pos = Vector(m_col.m_bbox.get_right() + 5, m_col.m_bbox.get_bottom() - 16);
+
+      if (m_mario_obj->state.action != ACT_PUNCHING && m_mario_obj->state.action != ACT_MOVE_PUNCHING && m_mario_obj->state.action != ACT_PICKING_UP)
+        return;
+
+      for (auto& moving_object : Sector::get().get_objects_by_type<MovingObject>())
+      {
+        Portable* portable = dynamic_cast<Portable*>(&moving_object);
+        if (!portable || !portable->is_portable()) continue;
+
+        // make sure the Portable isn't currently non-solid
+        if (moving_object.get_group() == COLGROUP_DISABLED) continue;
+
+        // check if we are within reach
+        if (moving_object.get_bbox().contains(pos))
+        {
+          if (m_mario_obj->state.action != ACT_PICKING_UP)
+            sm64_set_mario_action(m_mario_obj->ID(), ACT_PICKING_UP);
+
+          if (m_mario_obj->state.holdingObject)
+          {
+            m_grabbed_object = portable;
+
+            moving_object.add_remove_listener(m_grabbed_object_remove_listener.get());
+
+            position_grabbed_object();
+            break;
+          }
+        }
+      }
+    }
+    return;
+  }
+
   if (m_controller->hold(Control::ACTION) && !m_grabbed_object && !m_duck)
   {
 

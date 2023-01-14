@@ -23,6 +23,7 @@ extern "C" {
 #include "object/brick.hpp"
 #include "object/camera.hpp"
 #include "object/player.hpp"
+#include "object/portable.hpp"
 #include "object/sprite_particle.hpp"
 #include "supertux/console.hpp"
 #include "supertux/sector.hpp"
@@ -176,8 +177,9 @@ void MarioInstance::update(float tickspeed)
       }
 
       Brick* brick = dynamic_cast<Brick*>(sm64obj->obj);
+      Portable* portable = dynamic_cast<Portable*>(sm64obj->obj);
 
-      if (sm64obj->obj->get_group() == COLGROUP_DISABLED || (brick && state.action == ACT_GROUND_POUND))
+      if (sm64obj->obj->get_group() == COLGROUP_DISABLED || (portable && portable->is_grabbed()) || (brick && state.action == ACT_GROUND_POUND))
         sm64obj->transform.position[2] = 256; // make it out of reach
       else
       {
@@ -402,7 +404,7 @@ void MarioInstance::load_all_movingobjects()
   for (auto& object_ptr : Sector::get().get_objects())
   {
     MovingObject* object = dynamic_cast<MovingObject*>(object_ptr.get());
-    if (!object || object->get_group() != COLGROUP_STATIC)
+    if (!object || (object->get_group() != COLGROUP_STATIC && object->get_group() != COLGROUP_MOVING_STATIC))
       continue;
 
     Vector pos = object->get_pos();
