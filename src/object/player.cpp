@@ -22,7 +22,9 @@ extern "C" {
 #include <libsm64.h>
 #include <decomp/include/sm64shared.h>
 #include <decomp/include/audio_defines.h>
+#include <decomp/include/seq_ids.h>
 }
+#define SEQUENCE_ARGS(priority, seqId) ((priority << 8) | seqId)
 
 #include "audio/sound_manager.hpp"
 #include "badguy/badguy.hpp"
@@ -2047,9 +2049,19 @@ Player::on_flip(float height)
 void
 Player::make_invincible()
 {
-  SoundManager::current()->play("sounds/invincible_start.ogg");
+  if (!is_mario())
+  {
+    SoundManager::current()->play("sounds/invincible_start.ogg");
+    Sector::get().get_singleton_by_type<MusicObject>().play_music(HERRING_MUSIC);
+  }
+  else
+  {
+    Sector::get().get_singleton_by_type<MusicObject>().play_music((MusicType)-1); // silence music
+    sm64_play_sound_global(SOUND_MENU_STAR_SOUND);
+	sm64_play_sound_global(SOUND_MARIO_HERE_WE_GO);
+    sm64_play_music(0, SEQUENCE_ARGS(4, SEQ_EVENT_POWERUP), 0);
+  }
   m_invincible_timer.start(TUX_INVINCIBLE_TIME);
-  Sector::get().get_singleton_by_type<MusicObject>().play_music(HERRING_MUSIC);
 }
 
 void
@@ -2058,7 +2070,11 @@ Player::kill(bool completely, uint32_t marioDamage, Vector src)
   if (m_mario)
   {
     if (!completely)
+    {
+      if (m_safe_timer.started() || m_invincible_timer.started() || m_stone)
+        return;
       m_mario_obj->hurt(marioDamage, src);
+    }
     else
       m_mario_obj->kill(get_pos().y > Sector::get().get_height());
     return;

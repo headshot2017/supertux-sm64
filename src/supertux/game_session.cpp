@@ -18,6 +18,10 @@
 
 #include <cfloat>
 
+extern "C" {
+#include <libsm64.h>
+}
+
 #include "audio/sound_manager.hpp"
 #include "control/input_manager.hpp"
 #include "editor/editor.hpp"
@@ -109,6 +113,9 @@ GameSession::restart_level(bool after_death)
       tux.m_mario_obj = nullptr;
     }
   }
+
+  if (sm64_get_current_background_music() != UINT16_MAX)
+    sm64_stop_background_music(sm64_get_current_background_music());
 
   const PlayerStatus& currentStatus = m_savegame.get_player_status();
   m_coins_at_start = currentStatus.coins;
@@ -235,6 +242,9 @@ GameSession::abort_level()
   currentStatus.max_fire_bullets = m_max_fire_bullets_at_start;
   currentStatus.max_ice_bullets = m_max_ice_bullets_at_start;
   SoundManager::current()->stop_sounds();
+
+  if (sm64_get_current_background_music() != UINT16_MAX)
+    sm64_stop_background_music(sm64_get_current_background_music());
 }
 
 bool
@@ -448,13 +458,18 @@ GameSession::update(float dt_sec, const Controller& controller)
     return;
 
   if (m_currentsector->get_player().m_invincible_timer.started()) {
-    if (m_currentsector->get_player().m_invincible_timer.get_timeleft() <=
-       TUX_INVINCIBLE_TIME_WARNING) {
-      m_currentsector->get_singleton_by_type<MusicObject>().play_music(HERRING_WARNING_MUSIC);
-    } else {
-      m_currentsector->get_singleton_by_type<MusicObject>().play_music(HERRING_MUSIC);
+    if (!m_currentsector->get_player().is_mario()) {
+      if (m_currentsector->get_player().m_invincible_timer.get_timeleft() <=
+         TUX_INVINCIBLE_TIME_WARNING) {
+        m_currentsector->get_singleton_by_type<MusicObject>().play_music(HERRING_WARNING_MUSIC);
+      } else {
+        m_currentsector->get_singleton_by_type<MusicObject>().play_music(HERRING_MUSIC);
+      }
     }
   } else if (m_currentsector->get_singleton_by_type<MusicObject>().get_music_type() != LEVEL_MUSIC) {
+    if (m_currentsector->get_player().is_mario() && sm64_get_current_background_music() != UINT16_MAX) {
+      sm64_stop_background_music(sm64_get_current_background_music());
+    }
     m_currentsector->get_singleton_by_type<MusicObject>().play_music(LEVEL_MUSIC);
   }
   if (reset_button) {
@@ -490,6 +505,9 @@ GameSession::finish(bool win)
   if (m_end_seq_started)
     return;
   m_end_seq_started = true;
+
+  if (sm64_get_current_background_music() != UINT16_MAX)
+    sm64_stop_background_music(sm64_get_current_background_music());
 
   using namespace worldmap;
 
@@ -611,6 +629,9 @@ GameSession::start_sequence(Sequence seq, const SequenceData* data)
 
   m_end_sequence = static_cast<EndSequence*>(&m_currentsector->add_object(std::move(end_sequence)));
   m_end_sequence->start();
+
+  if (sm64_get_current_background_music() != UINT16_MAX)
+    sm64_stop_background_music(sm64_get_current_background_music());
 
   SoundManager::current()->play_music("music/misc/leveldone.ogg", false);
   m_currentsector->get_player().set_winning();
