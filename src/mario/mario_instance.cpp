@@ -25,6 +25,7 @@ extern "C" {
 #include "object/player.hpp"
 #include "object/portable.hpp"
 #include "object/sprite_particle.hpp"
+#include "object/trampoline.hpp"
 #include "supertux/console.hpp"
 #include "supertux/sector.hpp"
 #include "video/canvas.hpp"
@@ -404,7 +405,8 @@ void MarioInstance::load_all_movingobjects()
   for (auto& object_ptr : Sector::get().get_objects())
   {
     MovingObject* object = dynamic_cast<MovingObject*>(object_ptr.get());
-    if (!object || (object->get_group() != COLGROUP_STATIC && object->get_group() != COLGROUP_MOVING_STATIC))
+    Trampoline* ignore1 = dynamic_cast<Trampoline*>(object);
+    if (!object || ignore1 || (object->get_group() != COLGROUP_STATIC && object->get_group() != COLGROUP_MOVING_STATIC))
       continue;
 
     Vector pos = object->get_pos();
