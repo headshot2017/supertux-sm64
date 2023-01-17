@@ -1198,33 +1198,33 @@ Player::handle_input()
     m_mario_obj->input.buttonA = m_controller->hold(Control::JUMP);
     m_mario_obj->input.buttonB = m_controller->hold(Control::ACTION);
     m_mario_obj->input.buttonZ = m_controller->hold(Control::DOWN);
-    try_grab();
-    return;
   }
 
-  if (m_climbing) {
-    handle_input_climbing();
-    return;
-  }
-  if (m_swimming) {
-    handle_input_swimming();
-  }
-  else
-  {
-    if (m_water_jump)
+  if (!m_mario) {
+    if (m_climbing) {
+      handle_input_climbing();
+      return;
+    }
+    if (m_swimming) {
+      handle_input_swimming();
+    }
+    else
     {
-      swim(0,0,0);
+      if (m_water_jump)
+      {
+        swim(0,0,0);
+      }
     }
-  }
 
-  if (!m_swimming)
-  {
-    if (!m_water_jump && !m_backflipping) m_sprite->set_angle(0);
-    if (!m_jump_early_apex) {
-      m_physic.set_gravity_modifier(1.0f);
-    }
-    else {
-      m_physic.set_gravity_modifier(JUMP_EARLY_APEX_FACTOR);
+    if (!m_swimming)
+    {
+      if (!m_water_jump && !m_backflipping) m_sprite->set_angle(0);
+      if (!m_jump_early_apex) {
+        m_physic.set_gravity_modifier(1.0f);
+      }
+      else {
+        m_physic.set_gravity_modifier(JUMP_EARLY_APEX_FACTOR);
+      }
     }
   }
 
@@ -1249,15 +1249,17 @@ Player::handle_input()
     }
   }
 
-  /* Handle horizontal movement: */
-  if (!m_backflipping && !m_stone && !m_swimming) handle_horizontal_input();
+  if (!m_mario) {
+    /* Handle horizontal movement: */
+    if (!m_backflipping && !m_stone && !m_swimming) handle_horizontal_input();
 
-  /* Jump/jumping? */
-  if (on_ground())
-    m_can_jump = true;
+    /* Jump/jumping? */
+    if (on_ground())
+      m_can_jump = true;
 
-  /* Handle vertical movement: */
-  if (!m_stone && !m_swimming) handle_vertical_input();
+    /* Handle vertical movement: */
+    if (!m_stone && !m_swimming) handle_vertical_input();
+  }
 
   /* Shoot! */
   auto active_bullets = Sector::get().get_object_count<Bullet>();
@@ -1285,110 +1287,114 @@ Player::handle_input()
   }
 
   /* Turn to Stone */
-  if (m_controller->pressed(Control::DOWN) && m_player_status.bonus == EARTH_BONUS && !m_cooldown_timer.started() && on_ground() && !m_swimming) {
-    if (m_controller->hold(Control::ACTION) && !m_ability_timer.started()) {
-      m_ability_timer.start(static_cast<float>(m_player_status.max_earth_time) * STONE_TIME_PER_FLOWER);
-      m_powersprite->stop_animation();
-      m_stone = true;
-      m_physic.set_gravity_modifier(1.0f); // Undo jump_early_apex
+  if (!m_mario) {
+    if (m_controller->pressed(Control::DOWN) && m_player_status.bonus == EARTH_BONUS && !m_cooldown_timer.started() && on_ground() && !m_swimming) {
+      if (m_controller->hold(Control::ACTION) && !m_ability_timer.started()) {
+        m_ability_timer.start(static_cast<float>(m_player_status.max_earth_time) * STONE_TIME_PER_FLOWER);
+        m_powersprite->stop_animation();
+        m_stone = true;
+        m_physic.set_gravity_modifier(1.0f); // Undo jump_early_apex
+      }
     }
-  }
 
-  if (m_stone)
-    apply_friction();
+    if (m_stone)
+      apply_friction();
 
-  /* Revert from Stone */
-  if (m_stone && (!m_controller->hold(Control::ACTION) || m_ability_timer.get_timeleft() <= 0.5f)) {
-    m_cooldown_timer.start(m_ability_timer.get_timegone()/2.0f); //The longer stone form is used, the longer until it can be used again
-    m_ability_timer.stop();
-    m_sprite->set_angle(0.0f);
-    m_powersprite->set_angle(0.0f);
-    m_lightsprite->set_angle(0.0f);
-    m_stone = false;
-    for (int i = 0; i < 8; i++)
-    {
-      Vector ppos = Vector(m_col.m_bbox.get_left() + 8.0f + 16.0f * static_cast<float>(static_cast<int>(i / 4)),
-                           m_col.m_bbox.get_top() + 16.0f * static_cast<float>(i % 4));
-      float grey = graphicsRandom.randf(.4f, .8f);
-      Color pcolor = Color(grey, grey, grey);
-      Sector::get().add<Particles>(ppos, -60, 240, 42.0f, 81.0f, Vector(0.0f, 500.0f),
-                                                                8, pcolor, 4 + graphicsRandom.randf(-0.4f, 0.4f),
-                                                                0.8f + graphicsRandom.randf(0.0f, 0.4f), LAYER_OBJECTS + 2);
+    /* Revert from Stone */
+    if (m_stone && (!m_controller->hold(Control::ACTION) || m_ability_timer.get_timeleft() <= 0.5f)) {
+      m_cooldown_timer.start(m_ability_timer.get_timegone()/2.0f); //The longer stone form is used, the longer until it can be used again
+      m_ability_timer.stop();
+      m_sprite->set_angle(0.0f);
+      m_powersprite->set_angle(0.0f);
+      m_lightsprite->set_angle(0.0f);
+      m_stone = false;
+      for (int i = 0; i < 8; i++)
+      {
+        Vector ppos = Vector(m_col.m_bbox.get_left() + 8.0f + 16.0f * static_cast<float>(static_cast<int>(i / 4)),
+                             m_col.m_bbox.get_top() + 16.0f * static_cast<float>(i % 4));
+        float grey = graphicsRandom.randf(.4f, .8f);
+        Color pcolor = Color(grey, grey, grey);
+        Sector::get().add<Particles>(ppos, -60, 240, 42.0f, 81.0f, Vector(0.0f, 500.0f),
+                                                                  8, pcolor, 4 + graphicsRandom.randf(-0.4f, 0.4f),
+                                                                  0.8f + graphicsRandom.randf(0.0f, 0.4f), LAYER_OBJECTS + 2);
+      }
     }
-  }
 
-  /* Duck or Standup! */
-  if (m_controller->hold(Control::DOWN) && !m_stone && !m_swimming) {
-    do_duck();
-  } else {
-    do_standup(false);
+    /* Duck or Standup! */
+    if (m_controller->hold(Control::DOWN) && !m_stone && !m_swimming) {
+      do_duck();
+    } else {
+      do_standup(false);
+    }
   }
 
   /* grabbing */
   try_grab();
 
-  if (!m_controller->hold(Control::ACTION) && m_grabbed_object) {
-    auto moving_object = dynamic_cast<MovingObject*> (m_grabbed_object);
-    if (moving_object) {
-      // move the grabbed object a bit away from tux
-      Rectf grabbed_bbox = moving_object->get_bbox();
-      Rectf dest_;
-      if (m_swimming || m_water_jump)
-      {
-        dest_.set_bottom(m_col.m_bbox.get_bottom() + (std::sin(m_swimming_angle) * 32.f));
-        dest_.set_top(dest_.get_bottom() - grabbed_bbox.get_height());
-        dest_.set_left(m_col.m_bbox.get_left() + (std::cos(m_swimming_angle) * 32.f));
-        dest_.set_right(dest_.get_left() + grabbed_bbox.get_width());
-      }
-      else
-      {
-        dest_.set_bottom(m_col.m_bbox.get_top() + m_col.m_bbox.get_height() * 0.66666f);
-        dest_.set_top(dest_.get_bottom() - grabbed_bbox.get_height());
-
-        if (m_dir == Direction::LEFT)
+  if (!m_mario) {
+    if (!m_controller->hold(Control::ACTION) && m_grabbed_object) {
+      auto moving_object = dynamic_cast<MovingObject*> (m_grabbed_object);
+      if (moving_object) {
+        // move the grabbed object a bit away from tux
+        Rectf grabbed_bbox = moving_object->get_bbox();
+        Rectf dest_;
+        if (m_swimming || m_water_jump)
         {
-          dest_.set_right(m_col.m_bbox.get_left() - 1);
-          dest_.set_left(dest_.get_right() - grabbed_bbox.get_width());
-        }
-        else
-        {
-          dest_.set_left(m_col.m_bbox.get_right() + 1);
+          dest_.set_bottom(m_col.m_bbox.get_bottom() + (std::sin(m_swimming_angle) * 32.f));
+          dest_.set_top(dest_.get_bottom() - grabbed_bbox.get_height());
+          dest_.set_left(m_col.m_bbox.get_left() + (std::cos(m_swimming_angle) * 32.f));
           dest_.set_right(dest_.get_left() + grabbed_bbox.get_width());
         }
-      }
-
-      if (Sector::get().is_free_of_tiles(dest_, true) &&
-         Sector::get().is_free_of_statics(dest_, moving_object, true))
-      {
-        moving_object->set_pos(dest_.p1());
-        if (m_controller->hold(Control::UP))
-        {
-          m_grabbed_object->ungrab(*this, Direction::UP);
-        }
-        else if (m_controller->hold(Control::DOWN))
-        {
-          m_grabbed_object->ungrab(*this, Direction::DOWN);
-        }
-        else if (m_swimming || m_water_jump)
-        {
-          m_grabbed_object->ungrab(*this,
-            std::abs(m_swimming_angle) <= math::PI_2 ? Direction::RIGHT : Direction::LEFT);
-        }
         else
         {
-          m_grabbed_object->ungrab(*this, m_dir);
-        }
-        moving_object->del_remove_listener(m_grabbed_object_remove_listener.get());
-        m_grabbed_object = nullptr;
-      }
-    } else {
-      log_debug << "Non MovingObject grabbed?!?" << std::endl;
-    }
-  }
+          dest_.set_bottom(m_col.m_bbox.get_top() + m_col.m_bbox.get_height() * 0.66666f);
+          dest_.set_top(dest_.get_bottom() - grabbed_bbox.get_height());
 
-  /* stop backflipping at will */
-  if ( m_backflipping && ( !m_controller->hold(Control::JUMP) && !m_backflip_timer.started()) ){
-    stop_backflipping();
+          if (m_dir == Direction::LEFT)
+          {
+            dest_.set_right(m_col.m_bbox.get_left() - 1);
+            dest_.set_left(dest_.get_right() - grabbed_bbox.get_width());
+          }
+          else
+          {
+            dest_.set_left(m_col.m_bbox.get_right() + 1);
+            dest_.set_right(dest_.get_left() + grabbed_bbox.get_width());
+          }
+        }
+
+        if (Sector::get().is_free_of_tiles(dest_, true) &&
+           Sector::get().is_free_of_statics(dest_, moving_object, true))
+        {
+          moving_object->set_pos(dest_.p1());
+          if (m_controller->hold(Control::UP))
+          {
+            m_grabbed_object->ungrab(*this, Direction::UP);
+          }
+          else if (m_controller->hold(Control::DOWN))
+          {
+            m_grabbed_object->ungrab(*this, Direction::DOWN);
+          }
+          else if (m_swimming || m_water_jump)
+          {
+            m_grabbed_object->ungrab(*this,
+              std::abs(m_swimming_angle) <= math::PI_2 ? Direction::RIGHT : Direction::LEFT);
+          }
+          else
+          {
+            m_grabbed_object->ungrab(*this, m_dir);
+          }
+          moving_object->del_remove_listener(m_grabbed_object_remove_listener.get());
+          m_grabbed_object = nullptr;
+        }
+      } else {
+        log_debug << "Non MovingObject grabbed?!?" << std::endl;
+      }
+    }
+
+    /* stop backflipping at will */
+    if ( m_backflipping && ( !m_controller->hold(Control::JUMP) && !m_backflip_timer.started()) ){
+      stop_backflipping();
+    }
   }
 }
 
