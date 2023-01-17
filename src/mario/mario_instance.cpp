@@ -606,9 +606,9 @@ void MarioInstance::load_all_path_blocks()
         if (!block.is_solid()) continue;
 
         bool up =      y-1 >= 0                   && solids->get_tile(x, y-1).is_solid();
-        bool down =    y+1 < solids->get_height() && solids->get_tile(x, y+1).is_solid();
-        bool left =    x-1 >= 0                   && solids->get_tile(x-1, y).is_solid();
-        bool right =   x+1 < solids->get_width()  && solids->get_tile(x+1, y).is_solid();
+        bool down =    y+1 < solids->get_height() && (solids->get_tile(x, y+1).is_solid() || block.is_unisolid());
+        bool left =    x-1 >= 0                   && (solids->get_tile(x-1, y).is_solid() || block.is_unisolid());
+        bool right =   x+1 < solids->get_width()  && (solids->get_tile(x+1, y).is_solid() || block.is_unisolid());
         if (up && down && left && right) continue; // at least one side must be free
 
         int X = (solids->get_offset().x + (x*32 - solids->get_offset().x)) / MARIO_SCALE;
@@ -725,9 +725,9 @@ bool MarioInstance::add_block(int x, int y, int *i, TileMap* solids)
   obj.surfaces = (struct SM64Surface*)malloc(sizeof(struct SM64Surface) * 4*2);
 
   bool up =      !solids->is_outside_bounds(Vector(x*32, y*32-32)) && solids->get_tile(x - offsetX, y-1 - offsetY).is_solid();
-  bool down =    !solids->is_outside_bounds(Vector(x*32, y*32+32)) && solids->get_tile(x - offsetX, y+1 - offsetY).is_solid();
-  bool left =    !solids->is_outside_bounds(Vector(x*32-32, y*32)) && solids->get_tile(x-1 - offsetX, y - offsetY).is_solid();
-  bool right =   !solids->is_outside_bounds(Vector(x*32+32, y*32)) && solids->get_tile(x+1 - offsetX, y - offsetY).is_solid();
+  bool down =    !solids->is_outside_bounds(Vector(x*32, y*32+32)) && (solids->get_tile(x - offsetX, y+1 - offsetY).is_solid() || block.is_unisolid());
+  bool left =    !solids->is_outside_bounds(Vector(x*32-32, y*32)) && (solids->get_tile(x-1 - offsetX, y - offsetY).is_solid() || block.is_unisolid());
+  bool right =   !solids->is_outside_bounds(Vector(x*32+32, y*32)) && (solids->get_tile(x+1 - offsetX, y - offsetY).is_solid() || block.is_unisolid());
 
   // block ground face
   if (!up)
