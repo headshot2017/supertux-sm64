@@ -411,6 +411,15 @@ void MarioInstance::bounce(bool jump)
 void MarioInstance::hurt(uint32_t damage, Vector& src)
 {
   if (!spawned() || state.action & ACT_FLAG_INVULNERABLE || m_attacked) return;
+
+  PlayerStatus& status = m_player->get_status();
+  if (status.bonus == FIRE_BONUS
+    || status.bonus == ICE_BONUS
+    || status.bonus == AIR_BONUS
+    || status.bonus == EARTH_BONUS) {
+    m_player->set_bonus(GROWUP_BONUS, true);
+  }
+
   uint32_t subtype = (damage >= 3) ? INT_SUBTYPE_BIG_KNOCKBACK : 0;
   sm64_mario_take_damage(mario_id, damage, subtype, src.x/MARIO_SCALE, src.y/MARIO_SCALE, 0);
 }

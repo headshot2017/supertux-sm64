@@ -2079,14 +2079,6 @@ Player::kill(bool completely, uint32_t marioDamage, Vector src)
     {
       if (m_safe_timer.started() || m_invincible_timer.started() || m_stone)
         return;
-
-      if (m_player_status.bonus == FIRE_BONUS
-        || m_player_status.bonus == ICE_BONUS
-        || m_player_status.bonus == AIR_BONUS
-        || m_player_status.bonus == EARTH_BONUS) {
-        set_bonus(GROWUP_BONUS, true);
-	  }
-
       m_mario_obj->hurt(marioDamage, src);
     } else {
       set_bonus(GROWUP_BONUS, true);
