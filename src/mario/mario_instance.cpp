@@ -31,6 +31,78 @@ extern "C" {
 #include "video/canvas.hpp"
 #include "video/drawing_context.hpp"
 
+struct Color888
+{
+	uint8_t r, g, b;
+};
+
+const Color888 defaultColors[] = {
+	{0  , 0  , 255}, // Overalls
+	{255, 0  , 0  }, // Shirt/Hat
+	{254, 193, 121}, // Skin
+	{115, 6  , 0  }, // Hair
+	{255, 255, 255}, // Gloves
+	{114, 28 , 14 }, // Shoes
+};
+
+Color888 bonusColors[6][6] = {
+	{
+		// no bonus
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0}
+	},
+	{
+		// growup bonus
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0}
+	},
+	{
+		// fire bonus
+		{255, 0, 0},
+		{255, 255, 255},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0}
+	},
+	{
+		// ice bonus
+		{192, 0, 0},
+		{0, 128, 255},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0}
+	},
+	{
+		// air bonus
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0}
+	},
+	{
+		// earth bonus
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0},
+		{0,0,0}
+	},
+};
+
+
 MarioInstance::MarioInstance(Player* player) :
   m_player(player),
   mario_id(-1),
@@ -267,6 +339,7 @@ void MarioInstance::update(float tickspeed)
     new_pos.y += 16;
     m_curr_pos = new_pos;
 
+    BonusType bonus = m_player->get_status().bonus;
     for (int i=0; i<geometry.numTrianglesUsed*3; i++)
     {
       geometry.normal[i*3+1] *= -1;
@@ -274,6 +347,19 @@ void MarioInstance::update(float tickspeed)
       m_curr_geometry_pos[i*3+0] = geometry.position[i*3+0]*MARIO_SCALE;
       m_curr_geometry_pos[i*3+1] = geometry.position[i*3+1]*-MARIO_SCALE + 16;
       m_curr_geometry_pos[i*3+2] = geometry.position[i*3+2]*MARIO_SCALE;
+
+      uint8_t r = geometry.color[i*3+0]*255;
+      uint8_t g = geometry.color[i*3+1]*255;
+      uint8_t b = geometry.color[i*3+2]*255;
+      for (int c = 0; c < 6; c++) {
+        if (r == defaultColors[c].r && g == defaultColors[c].g && b == defaultColors[c].b &&
+           (bonusColors[bonus][c].r || bonusColors[bonus][c].g || bonusColors[bonus][c].b)) {
+          geometry.color[i*3+0] = bonusColors[bonus][c].r/255.f;
+          geometry.color[i*3+1] = bonusColors[bonus][c].g/255.f;
+          geometry.color[i*3+2] = bonusColors[bonus][c].b/255.f;
+          break;
+        }
+      }
     }
   }
 
