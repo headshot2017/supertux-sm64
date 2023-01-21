@@ -18,6 +18,7 @@ extern "C" {
 #include "badguy/igel.hpp"
 #include "badguy/livefire.hpp"
 #include "mario/mario_manager.hpp"
+#include "math/aatriangle.hpp"
 #include "math/rect.hpp"
 #include "math/rectf.hpp"
 #include "object/brick.hpp"
@@ -101,6 +102,288 @@ Color888 bonusColors[6][6] = {
 		{0,0,0}
 	},
 };
+
+
+// functions to convert slopes into libsm64 triangle vertices for each face
+void get_slope_triangle_up(int& x1, int& y1, int& x2, int& y2, int slope_info)
+{
+  switch(slope_info)
+  {
+    case AATriangle::NORTHWEST | AATriangle::DEFORM_RIGHT:
+    case AATriangle::NORTHWEST | AATriangle::DEFORM_TOP:
+    case AATriangle::NORTHWEST | AATriangle::DEFORM_BOTTOM:
+    case AATriangle::NORTHEAST | AATriangle::DEFORM_BOTTOM:
+    case AATriangle::NORTHEAST | AATriangle::DEFORM_TOP:
+    case AATriangle::NORTHEAST | AATriangle::DEFORM_LEFT:
+    case AATriangle::NORTHWEST:
+    case AATriangle::NORTHEAST:
+      x1 = 0;     y1 = 32;
+      x2 = 32;    y2 = 32;
+      break;
+
+    case AATriangle::NORTHEAST | AATriangle::DEFORM_RIGHT:
+    case AATriangle::SOUTHEAST | AATriangle::DEFORM_LEFT:
+      x1 = 16;    y1 = 32;
+      x2 = 32;    y2 = 32;
+      break;
+
+    case AATriangle::NORTHWEST | AATriangle::DEFORM_LEFT:
+    case AATriangle::SOUTHWEST | AATriangle::DEFORM_RIGHT:
+      x1 = 0;     y1 = 32;
+      x2 = 16;    y2 = 32;
+      break;
+
+    case AATriangle::SOUTHWEST | AATriangle::DEFORM_TOP:
+      x1 = 0;     y1 = 32;
+      x2 = 32;    y2 = 16;
+      break;
+
+    case AATriangle::SOUTHWEST | AATriangle::DEFORM_BOTTOM:
+      x1 = 0;     y1 = 16;
+      x2 = 32;    y2 = 0;
+      break;
+
+    case AATriangle::SOUTHEAST | AATriangle::DEFORM_TOP:
+      x1 = 0;     y1 = 16;
+      x2 = 32;    y2 = 32;
+      break;
+
+    case AATriangle::SOUTHEAST | AATriangle::DEFORM_BOTTOM:
+      x1 = 0;     y1 = 0;
+      x2 = 32;    y2 = 16;
+      break;
+
+    case AATriangle::SOUTHWEST | AATriangle::DEFORM_LEFT:
+      x1 = 0;     y1 = 32;
+      x2 = 16;    y2 = 0;
+      break;
+
+    case AATriangle::SOUTHEAST | AATriangle::DEFORM_RIGHT:
+      x1 = 16;     y1 = 0;
+      x2 = 32;     y2 = 32;
+      break;
+
+    case AATriangle::SOUTHWEST:
+      x1 = 0;     y1 = 32;
+      x2 = 32;    y2 = 0;
+      break;
+
+    case AATriangle::SOUTHEAST:
+      x1 = 0;     y1 = 0;
+      x2 = 32;    y2 = 32;
+      break;
+  }
+}
+
+void get_slope_triangle_left(int& x1, int& y1, int& x2, int& y2, int slope_info)
+{
+  switch(slope_info)
+  {
+    case AATriangle::NORTHWEST | AATriangle::DEFORM_BOTTOM:
+    case AATriangle::NORTHWEST | AATriangle::DEFORM_LEFT:
+    case AATriangle::NORTHWEST | AATriangle::DEFORM_RIGHT:
+    case AATriangle::SOUTHWEST | AATriangle::DEFORM_RIGHT:
+    case AATriangle::SOUTHWEST | AATriangle::DEFORM_LEFT:
+    case AATriangle::SOUTHWEST | AATriangle::DEFORM_TOP:
+    case AATriangle::NORTHWEST:
+    case AATriangle::SOUTHWEST:
+      x1 = 0;     y1 = 0;
+      x2 = 0;     y2 = 32;
+      break;
+
+    case AATriangle::SOUTHWEST | AATriangle::DEFORM_BOTTOM:
+    case AATriangle::SOUTHEAST | AATriangle::DEFORM_TOP:
+      x1 = 0;     y1 = 0;
+      x2 = 0;     y2 = 16;
+      break;
+
+    case AATriangle::NORTHWEST | AATriangle::DEFORM_TOP:
+    case AATriangle::NORTHEAST | AATriangle::DEFORM_BOTTOM:
+      x1 = 0;     y1 = 16;
+      x2 = 0;     y2 = 32;
+      break;
+
+    case AATriangle::SOUTHEAST | AATriangle::DEFORM_BOTTOM:
+      x1 = 0;     y1 = 0;
+      x2 = 32;    y2 = 16;
+      break;
+
+    case AATriangle::SOUTHEAST | AATriangle::DEFORM_RIGHT:
+      x1 = 16;    y1 = 0;
+      x2 = 32;    y2 = 32;
+      break;
+
+    case AATriangle::SOUTHEAST | AATriangle::DEFORM_LEFT:
+      x1 = 0;     y1 = 0;
+      x2 = 16;    y2 = 32;
+      break;
+
+    case AATriangle::NORTHEAST | AATriangle::DEFORM_LEFT:
+      x1 = 16;    y1 = 0;
+      x2 = 0;     y2 = 32;
+      break;
+
+    case AATriangle::NORTHEAST | AATriangle::DEFORM_RIGHT:
+      x1 = 0;     y1 = 0;
+      x2 = 0;     y2 = 0;
+      break;
+
+    case AATriangle::NORTHEAST | AATriangle::DEFORM_TOP:
+      x1 = 0;     y1 = 0;
+      x2 = 0;     y2 = 0;
+      break;
+
+    case AATriangle::SOUTHEAST:
+      x1 = 0;     y1 = 0;
+      x2 = 32;    y2 = 32;
+      break;
+
+    case AATriangle::NORTHEAST:
+      x1 = 0;     y1 = 32;
+      x2 = 32;    y2 = 0;
+      break;
+  }
+}
+
+void get_slope_triangle_right(int& x1, int& y1, int& x2, int& y2, int slope_info)
+{
+  switch(slope_info)
+  {
+    case AATriangle::SOUTHEAST | AATriangle::DEFORM_TOP:
+    case AATriangle::SOUTHEAST | AATriangle::DEFORM_RIGHT:
+    case AATriangle::SOUTHEAST | AATriangle::DEFORM_LEFT:
+    case AATriangle::NORTHEAST | AATriangle::DEFORM_LEFT:
+    case AATriangle::NORTHEAST | AATriangle::DEFORM_RIGHT:
+    case AATriangle::NORTHEAST | AATriangle::DEFORM_BOTTOM:
+    case AATriangle::SOUTHEAST:
+    case AATriangle::NORTHEAST:
+      x1 = 32;    y1 = 0;
+      x2 = 32;    y2 = 32;
+      break;
+
+    case AATriangle::SOUTHEAST | AATriangle::DEFORM_BOTTOM:
+    case AATriangle::SOUTHWEST | AATriangle::DEFORM_TOP:
+      x1 = 32;    y1 = 0;
+      x2 = 32;    y2 = 16;
+      break;
+
+    case AATriangle::NORTHEAST | AATriangle::DEFORM_TOP:
+    case AATriangle::NORTHWEST | AATriangle::DEFORM_BOTTOM:
+      x1 = 32;    y1 = 16;
+      x2 = 32;    y2 = 32;
+      break;
+
+    case AATriangle::SOUTHWEST | AATriangle::DEFORM_BOTTOM:
+      x1 = 0;     y1 = 16;
+      x2 = 32;    y2 = 0;
+      break;
+
+    case AATriangle::SOUTHWEST | AATriangle::DEFORM_LEFT:
+      x1 = 0;     y1 = 32;
+      x2 = 16;    y2 = 0;
+      break;
+
+    case AATriangle::SOUTHWEST | AATriangle::DEFORM_RIGHT:
+      x1 = 16;    y1 = 32;
+      x2 = 32;    y2 = 0;
+      break;
+
+    case AATriangle::NORTHWEST | AATriangle::DEFORM_RIGHT:
+      x1 = 16;    y1 = 0;
+      x2 = 32;    y2 = 32;
+      break;
+
+    case AATriangle::NORTHWEST | AATriangle::DEFORM_LEFT:
+      x1 = 0;     y1 = 0;
+      x2 = 0;     y2 = 0;
+      break;
+
+    case AATriangle::NORTHWEST | AATriangle::DEFORM_TOP:
+      x1 = 0;     y1 = 16;
+      x2 = 32;    y2 = 32;
+      break;
+
+    case AATriangle::SOUTHWEST:
+      x1 = 0;     y1 = 32;
+      x2 = 32;    y2 = 0;
+      break;
+
+    case AATriangle::NORTHWEST:
+      x1 = 0;     y1 = 0;
+      x2 = 32;    y2 = 32;
+      break;
+  }
+}
+
+void get_slope_triangle_down(int& x1, int& y1, int& x2, int& y2, int slope_info)
+{
+  switch(slope_info)
+  {
+    case AATriangle::SOUTHEAST | AATriangle::DEFORM_LEFT:
+    case AATriangle::SOUTHEAST | AATriangle::DEFORM_BOTTOM:
+    case AATriangle::SOUTHEAST | AATriangle::DEFORM_TOP:
+    case AATriangle::SOUTHWEST | AATriangle::DEFORM_TOP:
+    case AATriangle::SOUTHWEST | AATriangle::DEFORM_BOTTOM:
+    case AATriangle::SOUTHWEST | AATriangle::DEFORM_RIGHT:
+    case AATriangle::SOUTHEAST:
+    case AATriangle::SOUTHWEST:
+      x1 = 0;    y1 = 0;
+      x2 = 32;   y2 = 0;
+      break;
+
+    case AATriangle::SOUTHWEST | AATriangle::DEFORM_LEFT:
+    case AATriangle::NORTHWEST | AATriangle::DEFORM_RIGHT:
+      x1 = 0;    y1 = 0;
+      x2 = 16;   y2 = 0;
+      break;
+
+    case AATriangle::SOUTHEAST | AATriangle::DEFORM_RIGHT:
+    case AATriangle::NORTHEAST | AATriangle::DEFORM_LEFT:
+      x1 = 16;    y1 = 0;
+      x2 = 32;    y2 = 0;
+      break;
+
+    case AATriangle::NORTHEAST | AATriangle::DEFORM_RIGHT:
+      x1 = 16;    y1 = 32;
+      x2 = 32;    y2 = 0;
+      break;
+
+    case AATriangle::NORTHEAST | AATriangle::DEFORM_TOP:
+      x1 = 0;     y1 = 32;
+      x2 = 32;    y2 = 16;
+      break;
+
+    case AATriangle::NORTHEAST | AATriangle::DEFORM_BOTTOM:
+      x1 = 0;     y1 = 16;
+      x2 = 32;    y2 = 0;
+      break;
+
+    case AATriangle::NORTHWEST | AATriangle::DEFORM_BOTTOM:
+      x1 = 0;     y1 = 0;
+      x2 = 32;    y2 = 16;
+      break;
+
+    case AATriangle::NORTHWEST | AATriangle::DEFORM_TOP:
+      x1 = 0;     y1 = 16;
+      x2 = 32;    y2 = 32;
+      break;
+
+    case AATriangle::NORTHWEST | AATriangle::DEFORM_LEFT:
+      x1 = 0;     y1 = 0;
+      x2 = 16;    y2 = 32;
+      break;
+
+    case AATriangle::NORTHEAST:
+      x1 = 0;     y1 = 32;
+      x2 = 32;    y2 = 0;
+      break;
+
+    case AATriangle::NORTHWEST:
+      x1 = 0;     y1 = 0;
+      x2 = 32;    y2 = 32;
+      break;
+  }
+}
 
 
 MarioInstance::MarioInstance(Player* player) :
@@ -729,60 +1012,107 @@ bool MarioInstance::add_block(int x, int y, int *i, TileMap* solids)
   bool left =    !solids->is_outside_bounds(Vector(x*32-32, y*32)) && (solids->get_tile(x-1 - offsetX, y - offsetY).is_solid() || block.is_unisolid());
   bool right =   !solids->is_outside_bounds(Vector(x*32+32, y*32)) && (solids->get_tile(x+1 - offsetX, y - offsetY).is_solid() || block.is_unisolid());
 
+  int x1 = 0, y1 = 0;
+  int x2 = 0, y2 = 0;
+
   // block ground face
   if (!up)
   {
-    obj.surfaces[obj.surfaceCount+0].vertices[0][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][2] = 64 / MARIO_SCALE;
-    obj.surfaces[obj.surfaceCount+0].vertices[1][0] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][2] = -64 / MARIO_SCALE;
-    obj.surfaces[obj.surfaceCount+0].vertices[2][0] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][2] = 64 / MARIO_SCALE;
+    if (block.is_slope())
+      get_slope_triangle_up(x1, y1, x2, y2, block.get_data() & (AATriangle::DIRECTION_MASK | AATriangle::DEFORM_MASK));
+    else
+    {
+      x1 = 0;    y1 = 32;
+      x2 = 32;   y2 = 32;
+    }
 
-    obj.surfaces[obj.surfaceCount+1].vertices[0][0] = 0 / MARIO_SCALE; 		obj.surfaces[obj.surfaceCount+1].vertices[0][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][2] = -64 / MARIO_SCALE;
-    obj.surfaces[obj.surfaceCount+1].vertices[1][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][2] = 64 / MARIO_SCALE;
-    obj.surfaces[obj.surfaceCount+1].vertices[2][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][2] = -64 / MARIO_SCALE;
+    if (x1 || y1 || x2 || y2)
+    {
+      obj.surfaces[obj.surfaceCount+0].vertices[0][0] = x1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[0][1] = y1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[0][2] = -64 / MARIO_SCALE;
+      obj.surfaces[obj.surfaceCount+0].vertices[1][0] = x2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[1][1] = y2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[1][2] = 64 / MARIO_SCALE;
+      obj.surfaces[obj.surfaceCount+0].vertices[2][0] = x2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[2][1] = y2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[2][2] = -64 / MARIO_SCALE;
 
-    obj.surfaceCount += 2;
+      obj.surfaces[obj.surfaceCount+1].vertices[0][0] = x2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[0][1] = y2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[0][2] = 64 / MARIO_SCALE;
+      obj.surfaces[obj.surfaceCount+1].vertices[1][0] = x1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[1][1] = y1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[1][2] = -64 / MARIO_SCALE;
+      obj.surfaces[obj.surfaceCount+1].vertices[2][0] = x1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[2][1] = y1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[2][2] = 64 / MARIO_SCALE;
+
+      obj.surfaceCount += 2;
+    }
   }
 
   // left (Z+)
   if (!left)
   {
-    obj.surfaces[obj.surfaceCount+0].vertices[0][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+0].vertices[0][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][0] = 0 / MARIO_SCALE;
-    obj.surfaces[obj.surfaceCount+0].vertices[1][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][0] = 0 / MARIO_SCALE;
-    obj.surfaces[obj.surfaceCount+0].vertices[2][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+0].vertices[2][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][0] = 0 / MARIO_SCALE;
+    if (block.is_slope())
+      get_slope_triangle_left(x1, y1, x2, y2, block.get_data() & (AATriangle::DIRECTION_MASK | AATriangle::DEFORM_MASK));
+    else
+    {
+      x1 = 0;    y1 = 0;
+      x2 = 0;    y2 = 32;
+    }
 
-    obj.surfaces[obj.surfaceCount+1].vertices[0][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][0] = 0 / MARIO_SCALE;
-    obj.surfaces[obj.surfaceCount+1].vertices[1][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+1].vertices[1][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][0] = 0 / MARIO_SCALE;
-    obj.surfaces[obj.surfaceCount+1].vertices[2][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][0] = 0 / MARIO_SCALE;
+    if (x1 || y1 || x2 || y2)
+    {
+      obj.surfaces[obj.surfaceCount+0].vertices[0][0] = x1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[0][1] = y1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[0][2] = -64 / MARIO_SCALE;
+      obj.surfaces[obj.surfaceCount+0].vertices[1][0] = x2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[1][1] = y2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[1][2] = 64 / MARIO_SCALE;
+      obj.surfaces[obj.surfaceCount+0].vertices[2][0] = x2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[2][1] = y2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[2][2] = -64 / MARIO_SCALE;
 
-    obj.surfaceCount += 2;
+      obj.surfaces[obj.surfaceCount+1].vertices[0][0] = x2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[0][1] = y2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[0][2] = 64 / MARIO_SCALE;
+      obj.surfaces[obj.surfaceCount+1].vertices[1][0] = x1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[1][1] = y1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[1][2] = -64 / MARIO_SCALE;
+      obj.surfaces[obj.surfaceCount+1].vertices[2][0] = x1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[2][1] = y1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[2][2] = 64 / MARIO_SCALE;
+
+      obj.surfaceCount += 2;
+    }
   }
 
   // right (Z-)
   if (!right)
   {
-    obj.surfaces[obj.surfaceCount+0].vertices[0][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][0] = 32 / MARIO_SCALE;
-    obj.surfaces[obj.surfaceCount+0].vertices[1][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+0].vertices[1][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][0] = 32 / MARIO_SCALE;
-    obj.surfaces[obj.surfaceCount+0].vertices[2][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][0] = 32 / MARIO_SCALE;
+    if (block.is_slope())
+      get_slope_triangle_right(x1, y1, x2, y2, block.get_data() & (AATriangle::DIRECTION_MASK | AATriangle::DEFORM_MASK));
+    else
+    {
+      x1 = 32;   y1 = 0;
+      x2 = 32;   y2 = 32;
+    }
 
-    obj.surfaces[obj.surfaceCount+1].vertices[0][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+1].vertices[0][1] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][0] = 32 / MARIO_SCALE;
-    obj.surfaces[obj.surfaceCount+1].vertices[1][2] = 64 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][0] = 32 / MARIO_SCALE;
-    obj.surfaces[obj.surfaceCount+1].vertices[2][2] = -64 / MARIO_SCALE;	obj.surfaces[obj.surfaceCount+1].vertices[2][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][0] = 32 / MARIO_SCALE;
+    if (x1 || y1 || x2 || y2)
+    {
+      obj.surfaces[obj.surfaceCount+0].vertices[0][0] = x1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[0][1] = y1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[0][2] = 64 / MARIO_SCALE;
+      obj.surfaces[obj.surfaceCount+0].vertices[1][0] = x2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[1][1] = y2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[1][2] = -64 / MARIO_SCALE;
+      obj.surfaces[obj.surfaceCount+0].vertices[2][0] = x2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[2][1] = y2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[2][2] = 64 / MARIO_SCALE;
 
-    obj.surfaceCount += 2;
+      obj.surfaces[obj.surfaceCount+1].vertices[0][0] = x2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[0][1] = y2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[0][2] = -64 / MARIO_SCALE;
+      obj.surfaces[obj.surfaceCount+1].vertices[1][0] = x1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[1][1] = y1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[1][2] = 64 / MARIO_SCALE;
+      obj.surfaces[obj.surfaceCount+1].vertices[2][0] = x1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[2][1] = y1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[2][2] = -64 / MARIO_SCALE;
+
+      obj.surfaceCount += 2;
+    }
   }
 
   // block bottom face
   if (!down)
   {
-    obj.surfaces[obj.surfaceCount+0].vertices[0][0] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[0][2] = 64 / MARIO_SCALE;
-    obj.surfaces[obj.surfaceCount+0].vertices[1][0] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[1][2] = -64 / MARIO_SCALE;
-    obj.surfaces[obj.surfaceCount+0].vertices[2][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+0].vertices[2][2] = 64 / MARIO_SCALE;
+    if (block.is_slope())
+      get_slope_triangle_down(x1, y1, x2, y2, block.get_data() & (AATriangle::DIRECTION_MASK | AATriangle::DEFORM_MASK));
+    else
+    {
+      x1 = 0;    y1 = 0;
+      x2 = 32;   y2 = 0;
+    }
 
-    obj.surfaces[obj.surfaceCount+1].vertices[0][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[0][2] = -64 / MARIO_SCALE;
-    obj.surfaces[obj.surfaceCount+1].vertices[1][0] = 32 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[1][2] = 64 / MARIO_SCALE;
-    obj.surfaces[obj.surfaceCount+1].vertices[2][0] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][1] = 0 / MARIO_SCALE;		obj.surfaces[obj.surfaceCount+1].vertices[2][2] = -64 / MARIO_SCALE;
+    if (x1 || y1 || x2 || y2)
+    {
+      obj.surfaces[obj.surfaceCount+0].vertices[0][0] = x1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[0][1] = y1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[0][2] = 64 / MARIO_SCALE;
+      obj.surfaces[obj.surfaceCount+0].vertices[1][0] = x2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[1][1] = y2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[1][2] = -64 / MARIO_SCALE;
+      obj.surfaces[obj.surfaceCount+0].vertices[2][0] = x2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[2][1] = y2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+0].vertices[2][2] = 64 / MARIO_SCALE;
 
-    obj.surfaceCount += 2;
+      obj.surfaces[obj.surfaceCount+1].vertices[0][0] = x2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[0][1] = y2 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[0][2] = -64 / MARIO_SCALE;
+      obj.surfaces[obj.surfaceCount+1].vertices[1][0] = x1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[1][1] = y1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[1][2] = 64 / MARIO_SCALE;
+      obj.surfaces[obj.surfaceCount+1].vertices[2][0] = x1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[2][1] = y1 / MARIO_SCALE;    obj.surfaces[obj.surfaceCount+1].vertices[2][2] = -64 / MARIO_SCALE;
+
+      obj.surfaceCount += 2;
+    }
   }
 
   for (uint32_t ind=0; ind<obj.surfaceCount; ind++)
