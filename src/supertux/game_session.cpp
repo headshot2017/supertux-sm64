@@ -396,8 +396,10 @@ GameSession::update(float dt_sec, const Controller& controller)
 
   // respawning in new sector?
   if (!m_newsector.empty() && !m_newspawnpoint.empty()) {
-    if (m_currentsector->get_player().is_mario())
-    {
+    SM64MarioState oldState;
+    memset(&oldState, 0, sizeof(SM64MarioState));
+    if (m_currentsector->get_player().is_mario()) {
+      oldState = m_currentsector->get_player().m_mario_obj->state;
       m_currentsector->get_player().m_mario_obj->delete_blocks();
       m_currentsector->get_player().m_mario_obj->delete_all_movingobjects();
       m_currentsector->get_player().m_mario_obj->delete_all_path_blocks();
@@ -414,6 +416,12 @@ GameSession::update(float dt_sec, const Controller& controller)
     sector->get_singleton_by_type<MusicObject>().play_music(LEVEL_MUSIC);
     m_currentsector = sector;
     m_currentsector->play_looping_sounds();
+
+    if (m_currentsector->get_player().is_mario()) {
+      sm64_set_mario_action(m_currentsector->get_player().m_mario_obj->ID(), oldState.action);
+      sm64_set_mario_velocity(m_currentsector->get_player().m_mario_obj->ID(), oldState.velocity[0], oldState.velocity[1], oldState.velocity[2]);
+      sm64_set_mario_faceangle(m_currentsector->get_player().m_mario_obj->ID(), oldState.faceAngle);
+    }
 
     if (is_playing_demo())
     {
