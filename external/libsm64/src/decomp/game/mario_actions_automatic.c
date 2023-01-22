@@ -854,6 +854,37 @@ s32 act_tornado_twirling(struct MarioState *m) {
     return FALSE;
 }
 
+s32 act_climbing_ladder(struct MarioState *m) {
+    if (m->input & INPUT_B_PRESSED) {
+        m->pos[1] += 100;
+        return let_go_of_ledge(m);
+    }
+
+    if (m->input & INPUT_A_PRESSED && fabsf(m->controller->stickX) >= 16) {
+        m->faceAngle[1] = (m->controller->stickX < -16.f) ? 0xc000 : 0x4000;
+        return set_mario_action(m, ACT_WALL_KICK_AIR, 0);
+    }
+
+    m->vel[1] = (m->controller->stickY < -16.0f) ? 8 : (m->controller->stickY > 16.0f) ? -8 : 0;
+    m->pos[1] += m->vel[1];
+    m->faceAngle[1] = 0x8000;
+
+    play_sound_if_no_flag(m, SOUND_MARIO_WHOA, MARIO_MARIO_SOUND_PLAYED);
+
+    set_mario_animation(m, MARIO_ANIM_IDLE_ON_LEDGE);
+    if (m->vel[1]) {
+        m->marioObj->header.gfx.animInfo.animFrame += 5;
+        if (is_anim_past_end(m)) m->marioObj->header.gfx.animInfo.animFrame = 0;
+    }
+
+    m->pos[1] += 100;
+    vec3f_copy(m->marioObj->header.gfx.pos, m->pos);
+    m->pos[1] -= 100;
+    vec3s_set(m->marioObj->header.gfx.angle, 0, m->faceAngle[1], 0);
+
+    return FALSE;
+}
+
 s32 check_common_automatic_cancels(struct MarioState *m) {
     if (m->pos[1] < m->waterLevel - 100) {
         return set_water_plunge_action(m);
@@ -890,6 +921,7 @@ s32 mario_execute_automatic_action(struct MarioState *m) {
         case ACT_GRABBED:                cancel = act_grabbed(m);                break;
         case ACT_IN_CANNON:              cancel = act_in_cannon(m);              break;
         case ACT_TORNADO_TWIRLING:       cancel = act_tornado_twirling(m);       break;
+        case ACT_CLIMBING_LADDER:        cancel = act_climbing_ladder(m);        break;
     }
     /* clang-format on */
 
