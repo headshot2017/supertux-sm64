@@ -117,7 +117,10 @@ TitleScreen::setup()
   if (Sector::current() != &sector) {
     auto& music = sector.get_singleton_by_type<MusicObject>();
     music.play_music(LEVEL_MUSIC);
-    sector.activate(sector.get_player().get_pos());
+    if (sector.get_player().is_mario())
+      sector.activate(sector.get_player().get_pos() + Vector(0, -32));
+    else
+      sector.activate(sector.get_player().get_pos());
   }
 
   MenuManager::instance().set_menu(MenuStorage::MAIN_MENU);
