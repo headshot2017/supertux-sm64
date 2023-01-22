@@ -1190,14 +1190,14 @@ Player::handle_input()
 
   if (m_mario)
   {
-    if ((m_mario_obj->state.action & ACT_GROUP_MASK) == ACT_GROUP_SUBMERGED) // in the water
+    if ((m_mario_obj->state.action & ACT_GROUP_MASK) == ACT_GROUP_SUBMERGED || m_mario_obj->state.action == ACT_CLIMBING_LADDER) // in the water, or climbing a ladder
       m_mario_obj->input.stickY = float(m_controller->hold(Control::DOWN)) - float(m_controller->hold(Control::UP));
     else
       m_mario_obj->input.stickY = 0;
     m_mario_obj->input.stickX = float(m_controller->hold(Control::LEFT)) - float(m_controller->hold(Control::RIGHT));
     m_mario_obj->input.buttonA = m_controller->hold(Control::JUMP);
     m_mario_obj->input.buttonB = m_controller->hold(Control::ACTION);
-    m_mario_obj->input.buttonZ = m_controller->hold(Control::DOWN);
+    m_mario_obj->input.buttonZ = m_controller->hold(Control::DOWN) && !m_mario_obj->input.stickY;
   }
 
   if (!m_mario) {
@@ -2337,6 +2337,9 @@ Player::start_climbing(Climbable& climbable)
     stop_backflipping();
     do_standup(true);
   }
+
+  if (m_mario)
+    sm64_set_mario_action(m_mario_obj->ID(), ACT_CLIMBING_LADDER);
 }
 
 void
@@ -2351,6 +2354,9 @@ Player::stop_climbing(Climbable& /*climbable*/)
   m_physic.enable_gravity(true);
   m_physic.set_velocity(0, 0);
   m_physic.set_acceleration(0, 0);
+
+  if (m_mario && m_mario_obj->state.action == ACT_CLIMBING_LADDER)
+    sm64_set_mario_action(m_mario_obj->ID(), ACT_SOFT_BONK);
 
   if (m_controller->hold(Control::JUMP)) {
     m_on_ground_flag = true;
