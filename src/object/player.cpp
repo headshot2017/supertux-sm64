@@ -565,7 +565,7 @@ Player::update(float dt_sec)
   }
 
   // calculate movement for this frame
-  if (!m_deactivated) m_col.set_movement(m_physic.get_movement(dt_sec) + Vector(m_boost * dt_sec, 0));
+  m_col.set_movement(m_physic.get_movement(dt_sec) + Vector(m_boost * dt_sec, 0));
 
   if (m_grabbed_object != nullptr && !m_dying)
   {
