@@ -688,7 +688,8 @@ void MarioInstance::bounce(bool jump)
     sm64_play_sound_global(SOUND_ACTION_HIT);
   }
 
-  if (jump && !(state.action & ACT_FLAG_INVULNERABLE)) sm64_set_mario_velocity(mario_id, state.velocity[0], 50, 0);
+  if (jump && state.action != ACT_GROUND_POUND && !(state.action & ACT_FLAG_INVULNERABLE))
+    sm64_set_mario_velocity(mario_id, state.velocity[0], 50, 0);
 }
 
 void MarioInstance::hurt(uint32_t damage, Vector& src)
