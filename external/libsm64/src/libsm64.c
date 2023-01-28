@@ -300,13 +300,15 @@ SM64_LIB_FN void sm64_mario_tick( int32_t marioId, const struct SM64MarioInputs 
 	struct GlobalState *state = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
     global_state_bind( state );
 
+    int16_t oldHealth = (gMarioState->health >> 8);
+
     update_button( inputs->buttonA, A_BUTTON );
     update_button( inputs->buttonB, B_BUTTON );
     update_button( inputs->buttonZ, Z_TRIG );
 
-	gMarioState->marioObj->header.gfx.cameraToObject[0] = 0;
-	gMarioState->marioObj->header.gfx.cameraToObject[1] = 0;
-	gMarioState->marioObj->header.gfx.cameraToObject[2] = 0;
+    gMarioState->marioObj->header.gfx.cameraToObject[0] = 0;
+    gMarioState->marioObj->header.gfx.cameraToObject[1] = 0;
+    gMarioState->marioObj->header.gfx.cameraToObject[2] = 0;
 
     gMarioState->area->camera->yaw = atan2s( inputs->camLookZ, inputs->camLookX );
 
@@ -314,7 +316,7 @@ SM64_LIB_FN void sm64_mario_tick( int32_t marioId, const struct SM64MarioInputs 
     gController.stickY = 64.0f * inputs->stickY;
     gController.stickMag = sqrtf( gController.stickX*gController.stickX + gController.stickY*gController.stickY );
 
-	apply_mario_platform_displacement();
+    apply_mario_platform_displacement();
     bhv_mario_update();
     update_mario_platform(); // TODO platform grabbed here and used next tick could be a use-after-free
 
@@ -323,6 +325,10 @@ SM64_LIB_FN void sm64_mario_tick( int32_t marioId, const struct SM64MarioInputs 
     geo_process_root_hack_single_node( s_mario_graph_node );
 
     gAreaUpdateCounter++;
+
+    int16_t newHealth = (gMarioState->health >> 8);
+    if (newHealth > oldHealth)
+        play_sound(SOUND_MENU_POWER_METER, gMarioState->marioObj->header.gfx.cameraToObject);
 
     outState->health = gMarioState->health;
     vec3f_copy( outState->position, gMarioState->pos );
@@ -588,12 +594,7 @@ SM64_LIB_FN void sm64_mario_heal(int32_t marioId, uint8_t healCounter)
 	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
 	global_state_bind( globalState );
 
-	if (gMarioState->health < MARIO_FULL_HEALTH)
-	{
-		play_sound(SOUND_MENU_POWER_METER, gMarioState->marioObj->header.gfx.cameraToObject);
-		gMarioState->health += healCounter << 8;
-		if (gMarioState->health > MARIO_FULL_HEALTH) gMarioState->health = MARIO_FULL_HEALTH;
-	}
+    gMarioState->healCounter += healCounter;
 }
 
 SM64_LIB_FN void sm64_mario_set_health(int32_t marioId, uint16_t health)
