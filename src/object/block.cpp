@@ -45,7 +45,8 @@ Block::Block(SpritePtr newsprite) :
   m_breaking(false),
   m_bounce_dir(0),
   m_bounce_offset(0),
-  m_original_y(-1)
+  m_original_y(-1),
+  m_mario_hit_timer()
 {
   m_col.m_bbox.set_size(32, 32.1f);
   set_group(COLGROUP_STATIC);
@@ -61,7 +62,8 @@ Block::Block(const ReaderMapping& mapping, const std::string& sprite_file) :
   m_breaking(false),
   m_bounce_dir(0),
   m_bounce_offset(0),
-  m_original_y(-1)
+  m_original_y(-1),
+  m_mario_hit_timer()
 {
   mapping.get("x", m_col.m_bbox.get_left());
   mapping.get("y", m_col.m_bbox.get_top());
@@ -101,7 +103,16 @@ Block::collision(GameObject& other, const CollisionHit& )
       {
         if (player->get_bbox().get_top() > m_col.m_bbox.get_bottom() - SHIFT_DELTA)
         {
-          hit(*player);
+          if (player->is_mario())
+          {
+            if (m_mario_hit_timer.check() || !m_mario_hit_timer.started())
+            {
+              hit(*player);
+              m_mario_hit_timer.start(0.1f);
+            }
+          }
+          else
+            hit(*player);
         }
       }
     }

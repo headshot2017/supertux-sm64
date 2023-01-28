@@ -20,6 +20,7 @@
 #include "sprite/sprite.hpp"
 #include "sprite/sprite_ptr.hpp"
 #include "supertux/moving_object.hpp"
+#include "supertux/timer.hpp"
 
 class Player;
 class ReaderMapping;
@@ -61,6 +62,7 @@ protected:
   float m_bounce_dir;
   float m_bounce_offset;
   float m_original_y;
+  Timer m_mario_hit_timer;
 
 private:
   Block(const Block&) = delete;
