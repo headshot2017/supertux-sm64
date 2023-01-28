@@ -651,7 +651,7 @@ Player::update(float dt_sec)
         else
           m_mario_obj->input.stickX = (dist > 0) ? 0.5f : -0.5f;
       }
-      else if (abs(dist) > 24)
+      else if (abs(dist) > 32)
         m_mario_obj->input.stickX *= (sign[0] != sign[1]) ? -1 : 1;
       else
         m_mario_obj->input.stickX = 0;
