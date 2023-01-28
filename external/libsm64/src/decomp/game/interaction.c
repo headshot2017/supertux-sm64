@@ -7,7 +7,7 @@
 
 #include "area.h"
 //#include "actors/common1.h"
-#include "../audio/external.h"
+//#include "audio/external.h"
 //#include "behavior_actions.h"
 //#include "behavior_data.h"
 #include "camera.h"
@@ -63,7 +63,43 @@ struct InteractionHandler {
     u32 (*handler)(struct MarioState *, u32, struct Object *);
 };
 
-static struct InteractionHandler sInteractionHandlers[] = { };
+static u32 interact_noop(struct MarioState *m, u32 interactType, struct Object *o) {
+    return FALSE;
+}
+
+static struct InteractionHandler sInteractionHandlers[] = {
+    { INTERACT_COIN,           interact_noop },
+    { INTERACT_WATER_RING,     interact_noop },
+    { INTERACT_STAR_OR_KEY,    interact_noop },
+    { INTERACT_BBH_ENTRANCE,   interact_noop },
+    { INTERACT_WARP,           interact_noop },
+    { INTERACT_WARP_DOOR,      interact_noop },
+    { INTERACT_DOOR,           interact_noop },
+    { INTERACT_CANNON_BASE,    interact_noop },
+    { INTERACT_IGLOO_BARRIER,  interact_noop },
+    { INTERACT_TORNADO,        interact_noop },
+    { INTERACT_WHIRLPOOL,      interact_noop },
+    { INTERACT_STRONG_WIND,    interact_noop },
+    { INTERACT_FLAME,          interact_noop },
+    { INTERACT_SNUFIT_BULLET,  interact_noop },
+    { INTERACT_CLAM_OR_BUBBA,  interact_noop },
+    { INTERACT_BULLY,          interact_noop },
+    { INTERACT_SHOCK,          interact_noop },
+    { INTERACT_BOUNCE_TOP2,    interact_noop },
+    { INTERACT_MR_BLIZZARD,    interact_noop },
+    { INTERACT_HIT_FROM_BELOW, interact_noop },
+    { INTERACT_BOUNCE_TOP,     interact_noop },
+    { INTERACT_DAMAGE,         interact_noop },
+    { INTERACT_POLE,           interact_noop },
+    { INTERACT_HOOT,           interact_noop },
+    { INTERACT_BREAKABLE,      interact_noop },
+    { INTERACT_KOOPA,          interact_noop },
+    { INTERACT_KOOPA_SHELL,    interact_noop },
+    { INTERACT_UNKNOWN_08,     interact_noop },
+    { INTERACT_CAP,            interact_noop },
+    { INTERACT_GRABBABLE,      interact_noop },
+    { INTERACT_TEXT,           interact_noop },
+};
 
 static u32 sForwardKnockbackActions[][3] = {
     { ACT_SOFT_FORWARD_GROUND_KB, ACT_FORWARD_GROUND_KB, ACT_HARD_FORWARD_GROUND_KB },
@@ -248,10 +284,10 @@ void mario_grab_used_object(struct MarioState *m) {
 void mario_drop_held_object(struct MarioState *m) {
     /*if (m->heldObj != NULL) {
         if (m->heldObj->behavior == segmented_to_virtual(bhvKoopaShellUnderwater)) {
-    //      stop_shell_music();
-    //  }
+            stop_shell_music();
+        }
 
-    //  obj_set_held_state(m->heldObj, bhvCarrySomething4);
+        obj_set_held_state(m->heldObj, bhvCarrySomething4);
 
         // ! When dropping an object instead of throwing it, it will be put at Mario's
         // y-positon instead of the HOLP's y-position. This fact is often exploited when
@@ -582,7 +618,7 @@ void push_mario_out_of_object(struct MarioState *m, struct Object *o, f32 paddin
     f32 distance = sqrtf(offsetX * offsetX + offsetZ * offsetZ);
 
     if (distance < minDistance) {
-        struct Surface *floor;
+        struct SM64SurfaceCollisionData *floor;
         s16 pushAngle;
         f32 newMarioX;
         f32 newMarioZ;
@@ -802,8 +838,8 @@ u32 check_npc_talk(struct MarioState *m, struct Object *o) {
 void check_kick_or_punch_wall(struct MarioState *m) {
     if (m->flags & (MARIO_PUNCHING | MARIO_KICKING | MARIO_TRIPPING)) {
         Vec3f detector;
-        detector[0] = m->pos[0] + 30.0f * sins(m->faceAngle[1]);
-        detector[2] = m->pos[2] + 30.0f * coss(m->faceAngle[1]);
+        detector[0] = m->pos[0] + 50.0f * sins(m->faceAngle[1]);
+        detector[2] = m->pos[2] + 50.0f * coss(m->faceAngle[1]);
         detector[1] = m->pos[1];
 
         if (resolve_and_return_wall_collisions(detector, 80.0f, 5.0f) != NULL) {
