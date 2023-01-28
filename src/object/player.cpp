@@ -2079,6 +2079,7 @@ Player::kill(bool completely, uint32_t marioDamage, Vector src)
     {
       if (m_safe_timer.started() || m_invincible_timer.started() || m_stone)
         return;
+      m_safe_timer.start(1.f);
       m_mario_obj->hurt(marioDamage, src);
     } else {
       set_bonus(GROWUP_BONUS, true);
