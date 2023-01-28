@@ -77,7 +77,7 @@ TitleScreen::make_tux_jump()
 
   if (tux.is_mario())
   {
-    sm64_mario_set_health(tux.m_mario_obj->ID(), MARIO_FULL_HEALTH);
+    sm64_mario_heal(tux.m_mario_obj->ID(), 1);
 
     if (!(tux.m_mario_obj->state.action & ACT_FLAG_AIR))
     {

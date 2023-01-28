@@ -424,7 +424,7 @@ void MarioInstance::spawn(float x, float y)
   ConsoleBuffer::output << "Attempt to spawn Mario at " << x << " " << y << std::endl;
 
   load_new_blocks(x/32, y/32);
-  mario_id = sm64_mario_create(spawnX, spawnY, 0, 0,0,0,0);
+  mario_id = sm64_mario_create(spawnX, spawnY, 0);
 
   if (spawned())
   {
