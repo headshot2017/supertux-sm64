@@ -247,6 +247,7 @@ Player::Player(PlayerStatus& player_status, const std::string& name_) :
   {
     if (m_mario_obj) delete m_mario_obj;
     m_mario_obj = new MarioInstance(this);
+    add_bonus(GROWUP_BONUS, true);
   }
 }
 
