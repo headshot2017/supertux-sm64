@@ -762,7 +762,7 @@ s32 act_dive(struct MarioState *m) {
                 m->particleFlags |= PARTICLE_MIST_CIRCLE;
                 drop_and_set_mario_action(m, ACT_HEAD_STUCK_IN_GROUND, 0);
             } else if (!check_fall_damage(m, ACT_HARD_FORWARD_GROUND_KB)) {
-                if (!m->holdingObject == NULL) {
+                if (!m->holdingObject) {
                     set_mario_action(m, ACT_DIVE_SLIDE, 0);
                 } else {
                     set_mario_action(m, ACT_DIVE_PICKING_UP, 0);
