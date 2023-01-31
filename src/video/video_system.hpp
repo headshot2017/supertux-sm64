@@ -78,9 +78,7 @@ public:
   virtual SDLSurfacePtr make_screenshot() = 0;
 
   /** mario only */
-  virtual void init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code) = 0;
-  virtual void init_mario_instance(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh) = 0;
-  virtual void destroy_mario_instance(MarioMesh* mesh) = 0;
+  virtual void init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w, int h) = 0;
 
   void do_take_screenshot();
 

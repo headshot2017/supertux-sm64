@@ -175,21 +175,17 @@ struct MarioRequest : public DrawingRequest
   MarioRequest() :
     DrawingRequest(MARIO),
     geometry(nullptr),
-    mesh(nullptr),
     camera(0, 0),
     pos(0, 0),
     cap(0),
     texture(0),
-    shader(0),
     indices(nullptr) {}
 
   SM64MarioGeometryBuffers* geometry;
-  MarioMesh* mesh;
   Vector camera;
   Vector pos;
   uint32_t cap;
   uint32_t texture;
-  uint32_t shader;
   uint16_t* indices;
 
 private:

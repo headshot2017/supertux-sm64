@@ -193,35 +193,19 @@ GL20Context::draw_arrays(GLenum type, GLint first, GLsizei count)
 }
 
 void
-GL20Context::init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code)
+GL20Context::init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w, int h)
 {
-  // initialize texture
   glGenTextures(1, texture);
   glBindTexture(GL_TEXTURE_2D, *texture);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SM64_TEXTURE_WIDTH, SM64_TEXTURE_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, raw_texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, raw_texture);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  // no shader in opengl 2.0
-  *shader = 0;
 }
 
 void
-GL20Context::init_mario_instance(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh)
-{
-  
-}
-
-void
-GL20Context::destroy_mario_instance(MarioMesh* mesh)
-{
-  
-}
-
-void
-GL20Context::render_mario_instance(const SM64MarioGeometryBuffers* geometry, const MarioMesh* mesh, const Vector& pos, const Vector& camera, const uint32_t cap, const uint32_t& texture, const uint32_t& shader, const uint16_t* indices)
+GL20Context::render_mario_instance(const SM64MarioGeometryBuffers* geometry, const Vector& pos, const Vector& camera, const uint32_t cap, const uint32_t& texture, const uint16_t* indices)
 {
   uint32_t triangleSize = geometry->numTrianglesUsed*3;
 

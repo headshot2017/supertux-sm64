@@ -52,9 +52,7 @@ public:
   virtual SDLSurfacePtr make_screenshot() override;
 
   /** mario only */
-  virtual void init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code) override {}
-  virtual void init_mario_instance(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh) override {}
-  virtual void destroy_mario_instance(MarioMesh* mesh) override {}
+  virtual void init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w, int h) override {}
 
 private:
   void create_window();

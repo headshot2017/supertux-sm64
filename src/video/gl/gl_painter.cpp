@@ -466,7 +466,7 @@ GLPainter::draw_mario(const MarioRequest& request)
   assert_gl();
 
   GLContext& context = m_video_system.get_context();
-  context.render_mario_instance(request.geometry, request.mesh, request.pos, request.camera, request.cap, request.texture, request.shader, request.indices);
+  context.render_mario_instance(request.geometry, request.pos, request.camera, request.cap, request.texture, request.indices);
 
   assert_gl();
 }

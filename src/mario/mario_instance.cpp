@@ -434,7 +434,6 @@ void MarioInstance::spawn(float x, float y)
     geometry.color    = new float[9 * SM64_GEO_MAX_TRIANGLES];
     geometry.uv       = new float[6 * SM64_GEO_MAX_TRIANGLES];
     geometry.numTrianglesUsed = 0;
-    MarioManager::current()->init_mario(&geometry, &mesh);
 
     load_all_movingobjects();
     load_all_path_blocks();
@@ -480,8 +479,6 @@ void MarioInstance::destroy()
 
     sm64_mario_delete(mario_id);
     mario_id = -1;
-
-    MarioManager::current()->destroy_mario(&mesh);
 
     delete[] geometry.position; geometry.position = 0;
     delete[] geometry.normal; geometry.normal = 0;
@@ -664,13 +661,11 @@ void MarioInstance::draw(Canvas& canvas, Vector camera)
   context.push_transform();
 
   canvas.draw_mario(&geometry,
-                    &mesh,
                     m_pos,
                     camera,
                     state.flags,
-                    mariomanager->get_texture(),
-                    mariomanager->get_shader(),
-                    mariomanager->get_indices());
+                    mariomanager->mario_texture_handle,
+                    mariomanager->mario_indices);
 
   context.pop_transform();
 }

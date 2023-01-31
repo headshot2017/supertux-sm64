@@ -17,22 +17,19 @@ class MarioManager final : public Currenton<MarioManager>
 public:
   MarioManager();
 
-  void init_mario(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh);
-  void destroy_mario(MarioMesh* mesh);
-  //void render_mario(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh, uint32_t cap);
-
   std::string error_message;
   bool Loaded() const { return loaded; }
-  uint16_t* get_indices() { return mario_indices; }
-  uint32_t get_texture() { return mario_texture_handle; }
-  uint32_t get_shader() { return mario_shader_handle; }
+
+  uint16_t mario_indices[SM64_GEO_MAX_TRIANGLES * 3];
+  uint32_t mario_texture_handle;
+  uint32_t health_texture_handle;
+  uint32_t ui_texture_handle;
 
 private:
   bool loaded;
   uint8_t *mario_texture;
-  uint16_t mario_indices[SM64_GEO_MAX_TRIANGLES * 3];
-  uint32_t mario_texture_handle;
-  uint32_t mario_shader_handle;
+  uint8_t *health_texture;
+  uint8_t *ui_texture;
 
 private:
   MarioManager(const MarioManager&) = delete;

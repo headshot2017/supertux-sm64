@@ -2,6 +2,7 @@
 
 #include "mario/mario_manager.hpp"
 
+#include <stdio.h>
 #include <fstream>
 #include <string>
 #include <pthread.h>
@@ -21,59 +22,81 @@ extern "C" {
 #include "video/video_system.hpp"
 
 
-static const char *MARIO_SHADER =
-"\n uniform mat4 view;"
-"\n uniform mat4 projection;"
-"\n uniform mat3 modelviewprojection;"
-"\n uniform sampler2D marioTex;"
-"\n uniform int wingCap;"
-"\n uniform int metalCap;"
-"\n "
-"\n v2f vec3 v_color;"
-"\n v2f vec3 v_normal;"
-"\n v2f vec3 v_light;"
-"\n v2f vec2 v_uv;"
-"\n "
-"\n #ifdef VERTEX"
-"\n "
-"\n     in vec3 position;"
-"\n     in vec3 normal;"
-"\n     in vec3 color;"
-"\n     in vec2 uv;"
-"\n "
-"\n     void main()"
-"\n     {"
-"\n         v_color = color;"
-"\n         v_normal = normal;"
-"\n         v_light = transpose( mat3( view )) * normalize( vec3( 1 ));"
-"\n         v_uv = uv;"
-"\n "
-"\n         gl_Position = projection * view * vec4( position, 1. );"
-//"\n         gl_Position = vec4( position * modelviewprojection, 1. );"
-"\n     }"
-"\n "
-"\n #endif"
-"\n #ifdef FRAGMENT"
-"\n "
-"\n     out vec4 color;"
-"\n "
-"\n     void main() "
-"\n     {"
-"\n         float light = .5 + .5 * clamp( dot( v_normal, v_light ), 0., 1. );"
-"\n         vec4 texColor = vec4(0);"
-"\n         if (wingCap == 0 && metalCap == 0) texColor = texture(marioTex, v_uv);"
-"\n         else if (wingCap == 1)"
-"\n         {"
-"\n             texColor = texture(marioTex, v_uv);"
-"\n             if (texColor.a != 1) discard;"
-"\n         }"
-"\n         else if (metalCap == 1) texColor = texture(marioTex, v_uv); // NEED A WAY TO MAKE REFLECTION"
-"\n         vec3 mainColor = mix( v_color, texColor.rgb, texColor.a ); // v_uv.x >= 0. ? texColor.a : 0. );"
-"\n         color = vec4( mainColor * light, 1 );"
-"\n     }"
-"\n "
-"\n #endif";
+/**
+	SM64 texture atlases
+	https://github.com/ckosmic/libsm64-gmod/blob/master/g64/utils.cpp#L123
+*/
 
+/** Mario's texture */
+SM64TextureAtlasInfo mario_atlas_info = {
+    .offset = 0x114750,
+    .numUsedTextures = 11,
+    .atlasWidth = 11 * 64,
+    .atlasHeight = 64,
+    .texInfos = {
+        {.offset = 144, .width = 64, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 4240, .width = 32, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 6288, .width = 32, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 8336, .width = 32, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 10384, .width = 32, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 12432, .width = 32, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 14480, .width = 32, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 16528, .width = 32, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 30864, .width = 32, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 32912, .width = 32, .height = 64, .format = FORMAT_RGBA },
+        {.offset = 37008, .width = 32, .height = 64, .format = FORMAT_RGBA },
+    }
+};
+
+/** Power Meter texture */
+SM64TextureAtlasInfo health_atlas_info = {
+    .offset = 0x201410,
+    .numUsedTextures = 11,
+    .atlasWidth = 11 * 64,
+    .atlasHeight = 64,
+    .texInfos = {
+        {.offset = 0x233E0, .width = 32, .height = 64, .format = FORMAT_RGBA },
+        {.offset = 0x243E0, .width = 32, .height = 64, .format = FORMAT_RGBA },
+        {.offset = 0x253E0, .width = 32, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 0x25BE0, .width = 32, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 0x263E0, .width = 32, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 0x26BE0, .width = 32, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 0x273E0, .width = 32, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 0x27BE0, .width = 32, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 0x283E0, .width = 32, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 0x28BE0, .width = 32, .height = 32, .format = FORMAT_RGBA },
+        {.offset = 0x29628, .width = 32, .height = 64, .format = FORMAT_RGBA },
+    }
+};
+
+/** UI texture (only using Mario's head for world map) */
+SM64TextureAtlasInfo ui_atlas_info = {
+    .offset = 0x108A40,
+    .numUsedTextures = 14,
+    .atlasWidth = 14 * 16,
+    .atlasHeight = 16,
+    .texInfos = {
+        {.offset = 0x0000, .width = 16, .height = 16, .format = FORMAT_RGBA },
+        {.offset = 0x0200, .width = 16, .height = 16, .format = FORMAT_RGBA },
+        {.offset = 0x0400, .width = 16, .height = 16, .format = FORMAT_RGBA },
+        {.offset = 0x0600, .width = 16, .height = 16, .format = FORMAT_RGBA },
+        {.offset = 0x0800, .width = 16, .height = 16, .format = FORMAT_RGBA },
+        {.offset = 0x0A00, .width = 16, .height = 16, .format = FORMAT_RGBA },
+        {.offset = 0x0C00, .width = 16, .height = 16, .format = FORMAT_RGBA },
+        {.offset = 0x0E00, .width = 16, .height = 16, .format = FORMAT_RGBA },
+        {.offset = 0x1000, .width = 16, .height = 16, .format = FORMAT_RGBA },
+        {.offset = 0x1200, .width = 16, .height = 16, .format = FORMAT_RGBA },
+        {.offset = 0x4200, .width = 16, .height = 16, .format = FORMAT_RGBA },
+        {.offset = 0x4400, .width = 16, .height = 16, .format = FORMAT_RGBA },
+        {.offset = 0x4600, .width = 16, .height = 16, .format = FORMAT_RGBA },
+        {.offset = 0x4800, .width = 16, .height = 16, .format = FORMAT_RGBA },
+    }
+};
+
+
+/**
+	SM64 audio thread
+*/
 
 static SDL_AudioDeviceID dev;
 pthread_t gSoundThread;
@@ -179,17 +202,27 @@ MarioManager::MarioManager()
     else
     {
       /** Mario texture is 704x64 RGBA */
-      mario_texture = (uint8_t*)malloc(4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT);
+      mario_texture = new uint8_t[4 * mario_atlas_info.atlasWidth * mario_atlas_info.atlasHeight];
+      health_texture = new uint8_t[4 * health_atlas_info.atlasWidth * health_atlas_info.atlasHeight];
+      ui_texture = new uint8_t[4 * ui_atlas_info.atlasWidth * ui_atlas_info.atlasHeight];
 
       /** load libsm64 */
-      sm64_global_init(romBuffer, mario_texture);
-      //sm64_register_debug_print_function( [](const char *msg) {ConsoleBuffer::output << "libsm64: " << msg << std::endl;} );
+      sm64_global_init(romBuffer);
 
+      /** load textures from ROM */
+      sm64_texture_load(romBuffer, &mario_atlas_info, mario_texture);
+      sm64_texture_load(romBuffer, &health_atlas_info, health_texture);
+      sm64_texture_load(romBuffer, &ui_atlas_info, ui_texture);
+
+      /** init SM64 audio */
       sm64_audio_init(romBuffer);
       audio_init();
       sm64_play_sound_global(SOUND_MENU_STAR_SOUND);
 
-	  VideoSystem::current()->init_mario(mario_texture, &mario_texture_handle, &mario_shader_handle, MARIO_SHADER);
+      /** load textures into opengl */
+	  VideoSystem::current()->init_sm64_texture(mario_texture, &mario_texture_handle, mario_atlas_info.atlasWidth, mario_atlas_info.atlasHeight);
+	  VideoSystem::current()->init_sm64_texture(health_texture, &health_texture_handle, health_atlas_info.atlasWidth, health_atlas_info.atlasHeight);
+	  VideoSystem::current()->init_sm64_texture(ui_texture, &ui_texture_handle, ui_atlas_info.atlasWidth, ui_atlas_info.atlasHeight);
       for(int i=0; i<3*SM64_GEO_MAX_TRIANGLES; i++) mario_indices[i] = i;
 
       loaded = true;
@@ -197,16 +230,6 @@ MarioManager::MarioManager()
 
     delete[] romBuffer;
   }
-}
-
-void MarioManager::init_mario(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh)
-{
-  VideoSystem::current()->init_mario_instance(geometry, mesh);
-}
-
-void MarioManager::destroy_mario(MarioMesh* mesh)
-{
-  VideoSystem::current()->destroy_mario_instance(mesh);
 }
 
 /* EOF */

@@ -56,10 +56,8 @@ public:
 
   virtual bool supports_framebuffer() const = 0;
 
-  virtual void init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code) = 0;
-  virtual void init_mario_instance(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh) = 0;
-  virtual void destroy_mario_instance(MarioMesh* mesh) = 0;
-  virtual void render_mario_instance(const SM64MarioGeometryBuffers* geometry, const MarioMesh* mesh, const Vector& pos, const Vector& camera, const uint32_t cap, const uint32_t& texture, const uint32_t& shader, const uint16_t* indices) = 0;
+  virtual void init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w, int h) = 0;
+  virtual void render_mario_instance(const SM64MarioGeometryBuffers* geometry, const Vector& pos, const Vector& camera, const uint32_t cap, const uint32_t& texture, const uint16_t* indices) = 0;
 
 protected:
   float curr_mvp_matrix[9];

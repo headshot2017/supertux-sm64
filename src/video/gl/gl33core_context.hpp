@@ -55,10 +55,8 @@ public:
   virtual bool supports_framebuffer() const override { return true; }
 
   /** mario only */
-  virtual void init_mario(uint8_t* raw_texture, uint32_t* texture, uint32_t* shader, const char* shader_code) override;
-  virtual void init_mario_instance(SM64MarioGeometryBuffers* geometry, MarioMesh* mesh) override;
-  virtual void destroy_mario_instance(MarioMesh* mesh) override;
-  virtual void render_mario_instance(const SM64MarioGeometryBuffers* geometry, const MarioMesh* mesh, const Vector& pos, const Vector& camera, const uint32_t cap, const uint32_t& texture, const uint32_t& shader, const uint16_t* indices) override;
+  virtual void init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w, int h) override {}
+  virtual void render_mario_instance(const SM64MarioGeometryBuffers* geometry, const Vector& pos, const Vector& camera, const uint32_t cap, const uint32_t& texture, const uint16_t* indices) override {}
 
   GLProgram& get_program() const { return *m_program; }
   GLVertexArrays& get_vertex_arrays() const { return *m_vertex_arrays; }
