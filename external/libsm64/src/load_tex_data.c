@@ -8,17 +8,16 @@
 #include "decomp/tools/libmio0.h"
 #include "decomp/tools/n64graphics.h"
 
-#define MARIO_TEX_ROM_OFFSET 1132368
-#define ATLAS_WIDTH (NUM_USED_TEXTURES * 64)
-#define ATLAS_HEIGHT 64
+struct TextureAtlasInfo* mario_atlas_info;
 
-static void blt_image_to_atlas( rgba *img, int i, int w, int h, uint8_t *outTexture )
+static void blt_rgba_to_atlas( rgba *img, int i, struct TextureAtlasInfo* atlasInfo, uint8_t *outTexture )
 {
-    for( int iy = 0; iy < h; ++iy )
-    for( int ix = 0; ix < w; ++ix )
+    for( int iy = 0; iy < atlasInfo->texInfos[i].height; ++iy )
+    for( int ix = 0; ix < atlasInfo->texInfos[i].width; ++ix )
     {
-        int o = (ix + 64 * i) + iy * ATLAS_WIDTH;
-        int q = ix + iy * w;
+        int o = (ix-1 + atlasInfo->atlasHeight * i) + iy * atlasInfo->atlasWidth;
+        int q = ix + iy * atlasInfo->texInfos[i].width;
+        if(o < 0) continue;
         outTexture[4*o + 0] = img[q].red;
         outTexture[4*o + 1] = img[q].green;
         outTexture[4*o + 2] = img[q].blue;
@@ -26,23 +25,50 @@ static void blt_image_to_atlas( rgba *img, int i, int w, int h, uint8_t *outText
     }
 }
 
-void load_mario_textures_from_rom( uint8_t *rom, uint8_t *outTexture )
+static void blt_ia_to_atlas( ia *img, int i, struct TextureAtlasInfo* atlasInfo, uint8_t *outTexture )
 {
-    memset( outTexture, 0, 4 * ATLAS_WIDTH * ATLAS_HEIGHT );
+    for( int iy = 0; iy < atlasInfo->texInfos[i].height; ++iy )
+    for( int ix = 0; ix < atlasInfo->texInfos[i].width; ++ix )
+    {
+        int o = (ix-1 + atlasInfo->atlasHeight * i) + iy * atlasInfo->atlasWidth;
+        int q = ix + iy * atlasInfo->texInfos[i].width;
+        if(o < 0) continue;
+        outTexture[4*o + 0] = img[q].intensity;
+        outTexture[4*o + 1] = img[q].intensity;
+        outTexture[4*o + 2] = img[q].intensity;
+        outTexture[4*o + 3] = img[q].alpha;
+    }
+}
+
+void load_textures_from_rom( uint8_t *rom, struct TextureAtlasInfo* atlasInfo, uint8_t *outTexture )
+{
+    // Terrible way of storing Mario's texture atlas info
+    if(mario_atlas_info == NULL && atlasInfo->offset == 0x114750 && atlasInfo->texInfos[0].offset == 144) {
+        mario_atlas_info = atlasInfo;
+    }
+
+    memset( outTexture, 0, 4 * atlasInfo->atlasWidth * atlasInfo->atlasHeight );
 
     mio0_header_t head;
-    uint8_t *in_buf = rom + MARIO_TEX_ROM_OFFSET;
+    uint8_t *in_buf = rom + atlasInfo->offset;
 
     mio0_decode_header( in_buf, &head );
     uint8_t *out_buf = malloc( head.dest_size );
     mio0_decode( in_buf, out_buf, NULL );
 
-    for( int i = 0; i < NUM_USED_TEXTURES; ++i )
+    for( int i = 0; i < atlasInfo->numUsedTextures; i++ )
     {
-        uint8_t *raw = out_buf + mario_tex_offsets[i];
-        rgba *img = raw2rgba( raw, mario_tex_widths[i], mario_tex_heights[i], 16 );
-        blt_image_to_atlas( img, i, mario_tex_widths[i], mario_tex_heights[i], outTexture );
-        free( img );
+        uint8_t *raw = out_buf + atlasInfo->texInfos[i].offset;
+        if(atlasInfo->texInfos[i].format == FORMAT_RGBA) 
+        {
+            rgba *img = raw2rgba( raw, atlasInfo->texInfos[i].width, atlasInfo->texInfos[i].height, 16 );
+            blt_rgba_to_atlas( img, i, atlasInfo, outTexture );
+            free( img );
+        } else if(atlasInfo->texInfos[i].format == FORMAT_IA)  {
+            ia *img = raw2ia( raw, atlasInfo->texInfos[i].width, atlasInfo->texInfos[i].height, 16 );
+            blt_ia_to_atlas( img, i, atlasInfo, outTexture );
+            free( img );
+        }
     }
 
     free( out_buf );

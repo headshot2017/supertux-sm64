@@ -95,14 +95,14 @@ SM64_LIB_FN void sm64_register_play_sound_function( SM64PlaySoundFunctionPtr pla
 }
 
 
-SM64_LIB_FN void sm64_global_init( uint8_t *rom, uint8_t *outTexture )
+SM64_LIB_FN void sm64_global_init( uint8_t *rom )
 {
     if( s_init_global )
         sm64_global_terminate();
 
     s_init_global = true;
 
-    load_mario_textures_from_rom( rom, outTexture );
+    //load_mario_textures_from_rom( rom, outTexture );
     load_mario_anims_from_rom( rom );
 
     memory_init();
@@ -135,6 +135,11 @@ SM64_LIB_FN void sm64_global_terminate( void )
     surfaces_unload_all();
     unload_mario_anims();
     memory_terminate();
+}
+
+SM64_LIB_FN void sm64_texture_load( uint8_t *rom, struct SM64TextureAtlasInfo *atlasInfo, uint8_t *outTexture )
+{
+    load_textures_from_rom( rom, (struct TextureAtlasInfo*)atlasInfo, outTexture );
 }
 
 SM64_LIB_FN void sm64_audio_init( uint8_t *rom ) {
