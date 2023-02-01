@@ -103,6 +103,10 @@ Canvas::render(Renderer& renderer, Filter filter)
       case MARIO:
         painter.draw_mario(static_cast<const MarioRequest&>(request));
         break;
+
+      case SM64TEXTURE:
+        painter.draw_sm64_texture(static_cast<const SM64TextureRequest&>(request));
+        break;
     }
   }
 }
@@ -393,6 +397,24 @@ Canvas::draw_mario(SM64MarioGeometryBuffers* geometry, Vector& pos, Vector& came
   request->cap = cap;
   request->texture = texture;
   request->indices = indices;
+
+  m_requests.push_back(request);
+}
+
+void
+Canvas::draw_sm64_texture(uint32_t texture, const Vector& pos, const Vector& size, const Vector& texCoord1, const Vector& texCoord2, int layer)
+{
+  auto request = new(m_obst) SM64TextureRequest();
+
+  request->layer = layer;
+  request->flip = m_context.transform().flip;
+  request->alpha = m_context.transform().alpha;
+
+  request->texture = texture;
+  request->pos = pos;
+  request->size = size;
+  request->texCoord1 = texCoord1;
+  request->texCoord2 = texCoord2;
 
   m_requests.push_back(request);
 }

@@ -33,6 +33,7 @@ struct TextureBatchRequest;
 struct TextureRequest;
 struct TriangleRequest;
 struct MarioRequest;
+struct SM64TextureRequest;
 
 class Painter
 {
@@ -47,6 +48,7 @@ public:
   virtual void draw_line(const LineRequest& request) = 0;
   virtual void draw_triangle(const TriangleRequest& request) = 0;
   virtual void draw_mario(const MarioRequest& request) = 0;
+  virtual void draw_sm64_texture(const SM64TextureRequest& request) = 0;
 
   virtual void clear(const Color& color) = 0;
   virtual void get_pixel(const GetPixelRequest& request) const = 0;

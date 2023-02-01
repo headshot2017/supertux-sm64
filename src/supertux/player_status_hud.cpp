@@ -18,6 +18,7 @@
 
 #include <sstream>
 
+#include "mario/mario_manager.hpp"
 #include "supertux/game_object.hpp"
 #include "supertux/player_status.hpp"
 #include "supertux/resources.hpp"

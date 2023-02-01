@@ -37,6 +37,7 @@ public:
   virtual void draw_line(const LineRequest& request) override;
   virtual void draw_triangle(const TriangleRequest& request) override;
   virtual void draw_mario(const MarioRequest& request) override;
+  virtual void draw_sm64_texture(const SM64TextureRequest& request) override;
 
   virtual void clear(const Color& color) override;
   virtual void get_pixel(const GetPixelRequest& request) const override;

@@ -87,6 +87,7 @@ public:
   void get_pixel(const Vector& position, const std::shared_ptr<Color>& color_out);
 
   void draw_mario(SM64MarioGeometryBuffers* geometry, Vector& pos, Vector& camera, uint32_t cap, uint32_t texture, uint16_t* indices);
+  void draw_sm64_texture(uint32_t texture, const Vector& pos, const Vector& size, const Vector& texCoord1, const Vector& texCoord2, int layer);
 
   void clear();
   void render(Renderer& renderer, Filter filter);

@@ -269,6 +269,38 @@ GL20Context::render_mario_instance(const SM64MarioGeometryBuffers* geometry, con
   glLoadMatrixf(last_proj_matrix);
 }
 
+void
+GL20Context::render_sm64_texture(const uint32_t& texture, const Vector& pos, const Vector& size, const Vector& texCoord1, const Vector& texCoord2)
+{
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_NORMAL_ARRAY);
+  glDisableClientState(GL_COLOR_ARRAY);
+  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+  float fpos[8] = {
+    pos.x, pos.y,
+    pos.x+size.x, pos.y,
+    pos.x+size.x, pos.y+size.y,
+    pos.x, pos.y+size.y,
+  };
+  float uv[8] = {
+    texCoord1.x, texCoord1.y,
+    texCoord2.x, texCoord1.y,
+    texCoord2.x, texCoord2.y,
+    texCoord1.x, texCoord2.y,
+  };
+
+  glVertexPointer(2, GL_FLOAT, 0, fpos);
+  glTexCoordPointer(2, GL_FLOAT, 0, uv);
+
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glMatrixMode(GL_TEXTURE);
+  glLoadIdentity();
+
+  glDrawArrays(GL_QUADS, 0, 8);
+}
+
 #endif
 
 /* EOF */
