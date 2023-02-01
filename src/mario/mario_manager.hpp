@@ -12,6 +12,10 @@ extern "C" {
 #include "mario/mario_instance.hpp"
 #include "util/currenton.hpp"
 
+extern SM64TextureAtlasInfo mario_atlas_info;
+extern SM64TextureAtlasInfo health_atlas_info;
+extern SM64TextureAtlasInfo ui_atlas_info;
+
 class MarioManager final : public Currenton<MarioManager>
 {
 public:
