@@ -21,11 +21,15 @@
 
 #include "control/input_manager.hpp"
 #include "editor/editor.hpp"
+#include "mario/mario_manager.hpp"
 #include "sprite/sprite.hpp"
 #include "sprite/sprite_manager.hpp"
+#include "supertux/globals.hpp"
+#include "supertux/gameconfig.hpp"
 #include "supertux/savegame.hpp"
 #include "supertux/tile.hpp"
 #include "util/log.hpp"
+#include "video/viewport.hpp"
 #include "worldmap/camera.hpp"
 #include "worldmap/level_tile.hpp"
 #include "worldmap/special_tile.hpp"
@@ -54,6 +58,17 @@ void
 Tux::draw(DrawingContext& context)
 {
   if (m_worldmap->get_camera().is_panning()) return;
+
+  if (g_config->mario)
+  {
+    context.color().draw_sm64_texture(MarioManager::current()->ui_texture_handle,
+                                      Vector(SCREEN_WIDTH/2.f, SCREEN_HEIGHT/2.f),
+                                      Vector(32, 32),
+                                      Vector((16*12)/(float)ui_atlas_info.atlasWidth, 0),
+                                      Vector((16*13-1.5f)/(float)ui_atlas_info.atlasWidth, 1),
+                                      LAYER_OBJECTS);
+    return;
+  }
 
   std::string action = get_action_prefix_for_bonus(m_worldmap->get_savegame().get_player_status().bonus);
   if (!action.empty())
