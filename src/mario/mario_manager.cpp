@@ -11,10 +11,6 @@
 
 #include <boost/format.hpp>
 
-extern "C" {
-#include <decomp/include/audio_defines.h>
-}
-
 #include "addon/md5.hpp"
 #include "gui/dialog.hpp"
 #include "supertux/console.hpp"
