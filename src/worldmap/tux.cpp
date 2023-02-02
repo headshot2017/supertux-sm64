@@ -65,7 +65,7 @@ Tux::draw(DrawingContext& context)
                                       Vector(SCREEN_WIDTH/2.f, SCREEN_HEIGHT/2.f),
                                       Vector(32, 32),
                                       Vector((16*12)/(float)ui_atlas_info.atlasWidth, 0),
-                                      Vector((16*13-1.5f)/(float)ui_atlas_info.atlasWidth, 1),
+                                      Vector((16*13-1)/(float)ui_atlas_info.atlasWidth, 1),
                                       LAYER_OBJECTS);
     return;
   }
