@@ -10,6 +10,9 @@
 #include <sys/time.h>
 
 #include <boost/format.hpp>
+extern "C" {
+#include <decomp/include/audio_defines.h>
+}
 
 #include "addon/md5.hpp"
 #include "gui/dialog.hpp"
@@ -216,9 +219,9 @@ MarioManager::MarioManager()
       sm64_play_sound_global(SOUND_MENU_STAR_SOUND);
 
       /** load textures into opengl */
-	  VideoSystem::current()->init_sm64_texture(mario_texture, &mario_texture_handle, mario_atlas_info.atlasWidth, mario_atlas_info.atlasHeight);
-	  VideoSystem::current()->init_sm64_texture(health_texture, &health_texture_handle, health_atlas_info.atlasWidth, health_atlas_info.atlasHeight);
-	  VideoSystem::current()->init_sm64_texture(ui_texture, &ui_texture_handle, ui_atlas_info.atlasWidth, ui_atlas_info.atlasHeight);
+	  VideoSystem::current()->init_sm64_texture(mario_texture, &mario_texture_handle, mario_atlas_info.atlasWidth, mario_atlas_info.atlasHeight, true);
+	  VideoSystem::current()->init_sm64_texture(health_texture, &health_texture_handle, health_atlas_info.atlasWidth, health_atlas_info.atlasHeight, false);
+	  VideoSystem::current()->init_sm64_texture(ui_texture, &ui_texture_handle, ui_atlas_info.atlasWidth, ui_atlas_info.atlasHeight, false);
       for(int i=0; i<3*SM64_GEO_MAX_TRIANGLES; i++) mario_indices[i] = i;
 
       loaded = true;
