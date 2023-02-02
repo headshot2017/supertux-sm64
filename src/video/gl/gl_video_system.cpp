@@ -348,9 +348,9 @@ GLVideoSystem::make_screenshot()
 }
 
 void
-GLVideoSystem::init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w, int h)
+GLVideoSystem::init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w, int h, bool linear)
 {
-  m_context->init_sm64_texture(raw_texture, texture, w, h);
+  m_context->init_sm64_texture(raw_texture, texture, w, h, linear);
 }
 
 /* EOF */

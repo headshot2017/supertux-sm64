@@ -53,7 +53,7 @@ public:
   virtual SDLSurfacePtr make_screenshot() override;
 
   /** mario only */
-  virtual void init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w, int h) {}
+  virtual void init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w, int h, bool linear) {}
 
 private:
   Size m_window_size;

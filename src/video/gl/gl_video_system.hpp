@@ -59,7 +59,7 @@ public:
   virtual SDLSurfacePtr make_screenshot() override;
 
   /** mario only */
-  virtual void init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w, int h) override;
+  virtual void init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w, int h, bool linear) override;
 
   GLContext& get_context() const { return *m_context; }
 
