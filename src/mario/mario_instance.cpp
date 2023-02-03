@@ -438,6 +438,9 @@ void MarioInstance::spawn(float x, float y)
     load_all_movingobjects();
     load_all_path_blocks();
 
+    // no poison gas
+    sm64_set_mario_gas_level(mario_id, -(Sector::get().get_height()+256)/MARIO_SCALE + 32);
+
     // load a static surface way below the level
     uint32_t surfaceCount = 2;
     SM64Surface surfaces[surfaceCount];
