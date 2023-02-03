@@ -66,6 +66,7 @@ Tux::draw(DrawingContext& context)
                                       Vector(32, 32),
                                       Vector((16*12)/(float)ui_atlas_info.atlasWidth, 0),
                                       Vector((16*13-1)/(float)ui_atlas_info.atlasWidth, 1),
+                                      Color::WHITE,
                                       LAYER_OBJECTS);
     return;
   }

@@ -200,13 +200,15 @@ struct SM64TextureRequest : public DrawingRequest
     texture(0),
     pos(0, 0),
     texCoord1(0, 0),
-    texCoord2(0, 0) {}
+    texCoord2(0, 0),
+    color(0, 0, 0), {}
 
   uint32_t texture;
   Vector pos;
   Vector size;
   Vector texCoord1; // left and top
   Vector texCoord2; // right and bottom
+  Color color;
 
 private:
   SM64TextureRequest(const SM64TextureRequest&) = delete;

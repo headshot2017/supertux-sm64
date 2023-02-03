@@ -477,7 +477,7 @@ GLPainter::draw_sm64_texture(const SM64TextureRequest& request)
   assert_gl();
 
   GLContext& context = m_video_system.get_context();
-  context.render_sm64_texture(request.texture, request.pos, request.size, request.texCoord1, request.texCoord2);
+  context.render_sm64_texture(request.texture, request.pos, request.size, request.texCoord1, request.texCoord2, request.color);
 
   assert_gl();
 }

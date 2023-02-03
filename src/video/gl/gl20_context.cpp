@@ -270,9 +270,9 @@ GL20Context::render_mario_instance(const SM64MarioGeometryBuffers* geometry, con
 }
 
 void
-GL20Context::render_sm64_texture(const uint32_t& texture, const Vector& pos, const Vector& size, const Vector& texCoord1, const Vector& texCoord2)
+GL20Context::render_sm64_texture(const uint32_t& texture, const Vector& pos, const Vector& size, const Vector& texCoord1, const Vector& texCoord2, const Color& color)
 {
-  glColor4f(1,1,1,1);
+  glColor4f(color.r, color.g, color.b, color.a);
   glEnableClientState(GL_VERTEX_ARRAY);
   glDisableClientState(GL_NORMAL_ARRAY);
   glDisableClientState(GL_COLOR_ARRAY);

@@ -402,7 +402,7 @@ Canvas::draw_mario(SM64MarioGeometryBuffers* geometry, Vector& pos, Vector& came
 }
 
 void
-Canvas::draw_sm64_texture(uint32_t texture, const Vector& pos, const Vector& size, const Vector& texCoord1, const Vector& texCoord2, int layer)
+Canvas::draw_sm64_texture(uint32_t texture, const Vector& pos, const Vector& size, const Vector& texCoord1, const Vector& texCoord2, const Color& color, int layer)
 {
   auto request = new(m_obst) SM64TextureRequest();
 
@@ -415,6 +415,7 @@ Canvas::draw_sm64_texture(uint32_t texture, const Vector& pos, const Vector& siz
   request->size = size;
   request->texCoord1 = texCoord1;
   request->texCoord2 = texCoord2;
+  request->color = color;
 
   m_requests.push_back(request);
 }

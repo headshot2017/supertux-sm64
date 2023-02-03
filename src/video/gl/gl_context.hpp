@@ -58,7 +58,7 @@ public:
 
   virtual void init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w, int h, bool linear) = 0;
   virtual void render_mario_instance(const SM64MarioGeometryBuffers* geometry, const Vector& pos, const Vector& camera, const uint32_t cap, const uint32_t& texture, const uint16_t* indices) = 0;
-  virtual void render_sm64_texture(const uint32_t& texture, const Vector& pos, const Vector& size, const Vector& texCoord1, const Vector& texCoord2) = 0;
+  virtual void render_sm64_texture(const uint32_t& texture, const Vector& pos, const Vector& size, const Vector& texCoord1, const Vector& texCoord2, const Color& color) = 0;
 
 protected:
   float curr_mvp_matrix[9];

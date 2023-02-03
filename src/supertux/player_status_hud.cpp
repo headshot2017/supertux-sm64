@@ -201,6 +201,7 @@ PlayerStatusHUD::draw(DrawingContext& context)
                                         Vector(64, 128),
                                         Vector((0*32)/(float)health_atlas_info.atlasWidth, 0),
                                         Vector((1*32)/(float)health_atlas_info.atlasWidth, 1),
+                                        Color::WHITE,
                                         LAYER_HUD);
 
       context.color().draw_sm64_texture(MarioManager::current()->health_texture_handle,
@@ -208,6 +209,7 @@ PlayerStatusHUD::draw(DrawingContext& context)
                                         Vector(64, 128),
                                         Vector((2*32)/(float)health_atlas_info.atlasWidth, 0),
                                         Vector((3*32)/(float)health_atlas_info.atlasWidth, 1),
+                                        Color::WHITE,
                                         LAYER_HUD);
 
       int16_t healthSlices = (tux.m_mario_obj->state.health >> 8);
@@ -219,6 +221,7 @@ PlayerStatusHUD::draw(DrawingContext& context)
                                           Vector(64, 128),
                                           Vector((uCoord*32)/(float)health_atlas_info.atlasWidth, 0),
                                           Vector((uCoord*32+32)/(float)health_atlas_info.atlasWidth, 1),
+                                          Color::WHITE,
                                           LAYER_HUD);
       }
     }
