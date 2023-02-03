@@ -247,6 +247,16 @@ Player::Player(PlayerStatus& player_status, const std::string& name_) :
   {
     if (m_mario_obj) delete m_mario_obj;
     m_mario_obj = new MarioInstance(this);
+
+    if (m_player_status.bonus == NO_BONUS)
+    {
+      // tux MUST be big
+      m_player_status.bonus = GROWUP_BONUS;
+      Rectf bbox2 = m_col.m_bbox;
+      bbox2.move(Vector(0, m_col.m_bbox.get_height() - BIG_TUX_HEIGHT));
+      bbox2.set_height(BIG_TUX_HEIGHT);
+      m_col.set_size(bbox2.get_width(), bbox2.get_height());
+    }
   }
 }
 
