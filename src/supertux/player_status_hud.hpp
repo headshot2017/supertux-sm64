@@ -51,6 +51,10 @@ private:
   SurfacePtr fire_surface;
   SurfacePtr ice_surface;
 
+  float mario_health_y;
+  int mario_health_state;
+  int mario_health_state_add;
+  float mario_health_state_timer;
 private:
   PlayerStatusHUD(const PlayerStatusHUD&) = delete;
   PlayerStatusHUD& operator=(const PlayerStatusHUD&) = delete;
