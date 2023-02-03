@@ -92,6 +92,20 @@ SM64TextureAtlasInfo ui_atlas_info = {
     }
 };
 
+/** Coin texture */
+SM64TextureAtlasInfo coin_atlas_info = {
+    .offset = 0x201410,
+    .numUsedTextures = 4,
+    .atlasWidth = 4 * 32,
+    .atlasHeight = 32,
+    .texInfos = {
+        {.offset = 0x5780, .width = 32, .height = 32, .format = FORMAT_IA },
+        {.offset = 0x5F80, .width = 32, .height = 32, .format = FORMAT_IA },
+        {.offset = 0x6780, .width = 32, .height = 32, .format = FORMAT_IA },
+        {.offset = 0x6F80, .width = 32, .height = 32, .format = FORMAT_IA },
+    }
+};
+
 
 /**
 	SM64 audio thread
@@ -204,6 +218,7 @@ MarioManager::MarioManager()
       mario_texture = new uint8_t[4 * mario_atlas_info.atlasWidth * mario_atlas_info.atlasHeight];
       health_texture = new uint8_t[4 * health_atlas_info.atlasWidth * health_atlas_info.atlasHeight];
       ui_texture = new uint8_t[4 * ui_atlas_info.atlasWidth * ui_atlas_info.atlasHeight];
+      coin_texture = new uint8_t[4 * coin_atlas_info.atlasWidth * coin_atlas_info.atlasHeight];
 
       /** load libsm64 */
       sm64_global_init(romBuffer);
@@ -212,6 +227,7 @@ MarioManager::MarioManager()
       sm64_texture_load(romBuffer, &mario_atlas_info, mario_texture);
       sm64_texture_load(romBuffer, &health_atlas_info, health_texture);
       sm64_texture_load(romBuffer, &ui_atlas_info, ui_texture);
+      sm64_texture_load(romBuffer, &coin_atlas_info, coin_texture);
 
       /** init SM64 audio */
       sm64_audio_init(romBuffer);
@@ -222,6 +238,7 @@ MarioManager::MarioManager()
 	  VideoSystem::current()->init_sm64_texture(mario_texture, &mario_texture_handle, mario_atlas_info.atlasWidth, mario_atlas_info.atlasHeight, true);
 	  VideoSystem::current()->init_sm64_texture(health_texture, &health_texture_handle, health_atlas_info.atlasWidth, health_atlas_info.atlasHeight, false);
 	  VideoSystem::current()->init_sm64_texture(ui_texture, &ui_texture_handle, ui_atlas_info.atlasWidth, ui_atlas_info.atlasHeight, false);
+	  VideoSystem::current()->init_sm64_texture(coin_texture, &coin_texture_handle, coin_atlas_info.atlasWidth, coin_atlas_info.atlasHeight, true);
       for(int i=0; i<3*SM64_GEO_MAX_TRIANGLES; i++) mario_indices[i] = i;
 
       loaded = true;
