@@ -201,7 +201,7 @@ struct SM64TextureRequest : public DrawingRequest
     pos(0, 0),
     texCoord1(0, 0),
     texCoord2(0, 0),
-    color(0, 0, 0), {}
+    color(0, 0, 0) {}
 
   uint32_t texture;
   Vector pos;
