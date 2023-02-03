@@ -62,7 +62,7 @@ Tux::draw(DrawingContext& context)
   if (g_config->mario)
   {
     context.color().draw_sm64_texture(MarioManager::current()->ui_texture_handle,
-                                      Vector(SCREEN_WIDTH/2.f, SCREEN_HEIGHT/2.f),
+                                      get_pos() - m_worldmap->get_camera().get_offset(),
                                       Vector(32, 32),
                                       Vector((16*12)/(float)ui_atlas_info.atlasWidth, 0),
                                       Vector((16*13-1)/(float)ui_atlas_info.atlasWidth, 1),
