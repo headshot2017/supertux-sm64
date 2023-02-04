@@ -282,7 +282,7 @@ BonusBlock::try_open(Player* player)
       player->get_status().add_coins(1);
       if (m_hit_counter != 0)
         Sector::get().get_level().m_stats.increment_coins();
-      if (player->is_mario()) player->m_mario_obj->heal(1);
+      if (player->is_mario()) player->m_mario_obj->heal(2);
       break;
     }
 
