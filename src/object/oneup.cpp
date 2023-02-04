@@ -43,6 +43,7 @@ OneUp::collision(GameObject& other, const CollisionHit& )
   auto player = dynamic_cast<Player*> (&other);
   if (player) {
     player->get_status().add_coins(100);
+    if (player->is_mario()) player->m_mario_obj->heal(32);
 #if 0
     // FIXME: do we want this? q.v. src/level.cpp
     Sector::get().get_level()->stats.coins += 100;
