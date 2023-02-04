@@ -39,6 +39,7 @@ public:
   virtual HitResponse collision(GameObject& other, const CollisionHit& hit) override;
 
   virtual void update(float dt_sec) override;
+  virtual void draw(DrawingContext& context) override;
   virtual std::string get_class() const override { return "coin"; }
   virtual std::string get_display_name() const override { return _("Coin"); }
 
@@ -58,6 +59,9 @@ private:
   std::string m_collect_script;
 
   int m_starting_node;
+
+  int m_mario_sprite_frame;
+  float m_mario_sprite_timer;
 
 private:
   Coin(const Coin&) = delete;

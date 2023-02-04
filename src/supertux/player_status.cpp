@@ -19,9 +19,16 @@
 
 #include <sstream>
 
+extern "C" {
+#include <libsm64.h>
+#include <decomp/include/audio_defines.h>
+}
+
 #include "audio/sound_manager.hpp"
+#include "object/player.hpp"
 #include "supertux/globals.hpp"
 #include "supertux/game_session.hpp"
+#include "supertux/sector.hpp"
 #include "util/log.hpp"
 #include "util/reader_mapping.hpp"
 #include "util/writer.hpp"
@@ -88,7 +95,10 @@ PlayerStatus::add_coins(int count, bool play_sound)
   if (count >= 100)
     SoundManager::current()->play("sounds/lifeup.wav");
   else if (g_real_time > sound_played_time + 0.010f) {
-    SoundManager::current()->play("sounds/coin.wav");
+    if (Sector::current() && Sector::get().get_player().is_mario())
+      sm64_play_sound_global(SOUND_GENERAL_COIN);
+    else
+      SoundManager::current()->play("sounds/coin.wav");
     sound_played_time = g_real_time;
   }
 }

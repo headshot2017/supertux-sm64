@@ -16,9 +16,15 @@
 
 #include "object/coin.hpp"
 
+extern "C" {
+#include <decomp/include/audio_defines.h>
+}
+
 #include "audio/sound_manager.hpp"
 #include "audio/sound_source.hpp"
 #include "editor/editor.hpp"
+#include "mario/mario_manager.hpp"
+#include "object/camera.hpp"
 #include "object/bouncy_coin.hpp"
 #include "object/player.hpp"
 #include "object/tilemap.hpp"
@@ -35,7 +41,9 @@ Coin::Coin(const Vector& pos) :
   m_add_path(false),
   m_physic(),
   m_collect_script(),
-  m_starting_node(0)
+  m_starting_node(0),
+  m_mario_sprite_frame(0),
+  m_mario_sprite_timer(0.f)
 {
   SoundManager::current()->preload("sounds/coin.wav");
 }
@@ -48,7 +56,9 @@ Coin::Coin(const ReaderMapping& reader) :
   m_add_path(false),
   m_physic(),
   m_collect_script(),
-  m_starting_node(0)
+  m_starting_node(0),
+  m_mario_sprite_frame(0),
+  m_mario_sprite_timer(0.f)
 {
   reader.get("starting-node", m_starting_node, 0);
 
@@ -94,6 +104,32 @@ Coin::update(float dt_sec)
       m_col.set_movement(v - get_pos());
     }
   }
+
+  if (Sector::get().get_player().is_mario())
+  {
+    m_mario_sprite_timer += dt_sec;
+    while (m_mario_sprite_timer >= 0.1f)
+    {
+      m_mario_sprite_timer -= 0.1f;
+      m_mario_sprite_frame++;
+      if (m_mario_sprite_frame > 3) m_mario_sprite_frame = 0;
+    }
+  }
+}
+
+void
+Coin::draw(DrawingContext& context)
+{
+  if (!Sector::get().get_player().is_mario())
+    m_sprite->draw(context.color(), get_pos(), m_layer);
+  else
+    context.color().draw_sm64_texture(MarioManager::current()->coin_texture_handle,
+                                      get_pos() - Sector::get().get_camera().get_translation(),
+                                      Vector(32, 32),
+                                      Vector((m_mario_sprite_frame*32)/(float)coin_atlas_info.atlasWidth, 0),
+                                      Vector((m_mario_sprite_frame*32+32)/(float)coin_atlas_info.atlasWidth, 1),
+                                      Color::YELLOW,
+                                      m_layer);
 }
 
 void
@@ -119,72 +155,80 @@ Coin::editor_update()
 void
 Coin::collect()
 {
-  static Timer sound_timer;
-  static int pitch_one = 128;
-  static float last_pitch = 1;
-  float pitch = 1;
-
-  int tile = static_cast<int>(get_pos().y / 32);
-
-  if (!sound_timer.started()) {
-    pitch_one = tile;
-    pitch = 1;
-    last_pitch = 1;
-  } else if (sound_timer.get_timegone() < 0.02f) {
-    pitch = last_pitch;
-  } else {
-    switch ((pitch_one - tile) % 7) {
-      case -6:
-        pitch = 1.f/2;  // C
-        break;
-      case -5:
-        pitch = 5.f/8;  // E
-        break;
-      case -4:
-        pitch = 4.f/6;  // F
-        break;
-      case -3:
-        pitch = 3.f/4;  // G
-        break;
-      case -2:
-        pitch = 5.f/6;  // A
-        break;
-      case -1:
-        pitch = 9.f/10;  // Bb
-        break;
-      case 0:
-        pitch = 1.f;  // c
-        break;
-      case 1:
-        pitch = 9.f/8;  // d
-        break;
-      case 2:
-        pitch = 5.f/4;  // e
-        break;
-      case 3:
-        pitch = 4.f/3;  // f
-        break;
-      case 4:
-        pitch = 3.f/2;  // g
-        break;
-      case 5:
-        pitch = 5.f/3;  // a
-        break;
-      case 6:
-        pitch = 9.f/5;  // bb
-        break;
-    }
-    last_pitch = pitch;
-  }
-  sound_timer.start(1);
-
-  std::unique_ptr<SoundSource> soundSource = SoundManager::current()->create_sound_source("sounds/coin.wav");
-  soundSource->set_position(get_pos());
-  soundSource->set_pitch(pitch);
-  soundSource->play();
-  SoundManager::current()->manage_source(std::move(soundSource));
-
   Player& tux = Sector::get().get_player();
+
+  if (!tux.is_mario())
+  {
+    static Timer sound_timer;
+    static int pitch_one = 128;
+    static float last_pitch = 1;
+    float pitch = 1;
+
+    int tile = static_cast<int>(get_pos().y / 32);
+
+    if (!sound_timer.started()) {
+      pitch_one = tile;
+      pitch = 1;
+      last_pitch = 1;
+    } else if (sound_timer.get_timegone() < 0.02f) {
+      pitch = last_pitch;
+    } else {
+      switch ((pitch_one - tile) % 7) {
+        case -6:
+          pitch = 1.f/2;  // C
+          break;
+        case -5:
+          pitch = 5.f/8;  // E
+          break;
+        case -4:
+          pitch = 4.f/6;  // F
+          break;
+        case -3:
+          pitch = 3.f/4;  // G
+          break;
+        case -2:
+          pitch = 5.f/6;  // A
+          break;
+        case -1:
+          pitch = 9.f/10;  // Bb
+          break;
+        case 0:
+          pitch = 1.f;  // c
+          break;
+        case 1:
+          pitch = 9.f/8;  // d
+          break;
+        case 2:
+          pitch = 5.f/4;  // e
+          break;
+        case 3:
+          pitch = 4.f/3;  // f
+          break;
+        case 4:
+          pitch = 3.f/2;  // g
+          break;
+        case 5:
+          pitch = 5.f/3;  // a
+          break;
+        case 6:
+          pitch = 9.f/5;  // bb
+          break;
+      }
+      last_pitch = pitch;
+    }
+    sound_timer.start(1);
+
+    std::unique_ptr<SoundSource> soundSource = SoundManager::current()->create_sound_source("sounds/coin.wav");
+    soundSource->set_position(get_pos());
+    soundSource->set_pitch(pitch);
+    soundSource->play();
+    SoundManager::current()->manage_source(std::move(soundSource));
+  }
+  else
+  {
+    sm64_play_sound_global(SOUND_GENERAL_COIN);
+  }
+
   tux.get_status().add_coins(1, false);
   if (tux.is_mario()) tux.m_mario_obj->heal(2);
   Sector::get().add<BouncyCoin>(get_pos(), false, get_sprite_name());
@@ -234,6 +278,17 @@ HeavyCoin::update(float dt_sec)
 {
   // enable physics
   m_col.set_movement(m_physic.get_movement(dt_sec));
+
+  if (Sector::get().get_player().is_mario())
+  {
+    m_mario_sprite_timer += dt_sec;
+    while (m_mario_sprite_timer >= 0.1f)
+    {
+      m_mario_sprite_timer -= 0.1f;
+      m_mario_sprite_frame++;
+      if (m_mario_sprite_frame > 3) m_mario_sprite_frame = 0;
+    }
+  }
 }
 
 void

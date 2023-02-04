@@ -37,6 +37,9 @@ private:
   Physic physic;
   Vector pos;
   SpritePtr sprite;
+
+  int m_mario_sprite_frame;
+  float m_mario_sprite_timer;
 };
 
 #endif

@@ -39,6 +39,9 @@ private:
   Timer timer;
   float emerge_distance;
 
+  int m_mario_sprite_frame;
+  float m_mario_sprite_timer;
+
 private:
   BouncyCoin(const BouncyCoin&) = delete;
   BouncyCoin& operator=(const BouncyCoin&) = delete;

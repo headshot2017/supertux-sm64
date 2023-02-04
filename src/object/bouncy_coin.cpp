@@ -16,8 +16,12 @@
 
 #include "object/bouncy_coin.hpp"
 
+#include "mario/mario_manager.hpp"
+#include "object/camera.hpp"
+#include "object/player.hpp"
 #include "sprite/sprite.hpp"
 #include "sprite/sprite_manager.hpp"
+#include "supertux/sector.hpp"
 
 /** this controls the time over which a bouncy coin fades */
 static const float FADE_TIME = .2f;
@@ -28,7 +32,9 @@ BouncyCoin::BouncyCoin(const Vector& pos, bool emerge, const std::string& sprite
   sprite(SpriteManager::current()->create(sprite_path)),
   position(pos),
   timer(),
-  emerge_distance(0)
+  emerge_distance(0),
+  m_mario_sprite_frame(0),
+  m_mario_sprite_timer(0.f)
 {
   timer.start(LIFE_TIME);
 
@@ -43,6 +49,17 @@ BouncyCoin::update(float dt_sec)
   float dist = -200 * dt_sec;
   position.y += dist;
   emerge_distance += dist;
+
+  if (Sector::get().get_player().is_mario())
+  {
+    m_mario_sprite_timer += dt_sec;
+    while (m_mario_sprite_timer >= 0.1f)
+    {
+      m_mario_sprite_timer -= 0.1f;
+      m_mario_sprite_frame++;
+      if (m_mario_sprite_frame > 3) m_mario_sprite_frame = 0;
+    }
+  }
 
   if (timer.check())
     remove_me();
@@ -65,7 +82,17 @@ BouncyCoin::draw(DrawingContext& context)
   } else {
     layer = LAYER_OBJECTS + 5;
   }
-  sprite->draw(context.color(), position, layer);
+
+  if (!Sector::get().get_player().is_mario())
+    sprite->draw(context.color(), position, layer);
+  else
+    context.color().draw_sm64_texture(MarioManager::current()->coin_texture_handle,
+                                      position - Sector::get().get_camera().get_translation(),
+                                      Vector(32, 32),
+                                      Vector((m_mario_sprite_frame*32)/(float)coin_atlas_info.atlasWidth, 0),
+                                      Vector((m_mario_sprite_frame*32+32)/(float)coin_atlas_info.atlasWidth, 1),
+                                      Color(1, 1, 0, context.get_alpha()),
+                                      layer);
 
   if (fading) {
     context.pop_transform();
