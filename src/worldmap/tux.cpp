@@ -64,7 +64,7 @@ Tux::draw(DrawingContext& context)
     context.color().draw_sm64_texture(MarioManager::current()->ui_texture_handle,
                                       get_pos() - m_worldmap->get_camera().get_offset(),
                                       Vector(32, 32),
-                                      Vector((16*12)/(float)ui_atlas_info.atlasWidth, 0),
+                                      Vector((16*12-1)/(float)ui_atlas_info.atlasWidth, 0),
                                       Vector((16*13-1)/(float)ui_atlas_info.atlasWidth, 1),
                                       Color::WHITE,
                                       LAYER_OBJECTS);
