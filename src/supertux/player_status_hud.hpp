@@ -21,6 +21,7 @@
 
 #include "supertux/game_object.hpp"
 
+#include "math/vector.hpp"
 #include "video/color.hpp"
 #include "video/surface_ptr.hpp"
 
@@ -42,6 +43,7 @@ public:
   virtual bool is_singleton() const override { return true; }
 
   void reset();
+  void draw_sm64_number(DrawingContext& context, Vector& pos, int num);
 
 private:
   PlayerStatus& m_player_status;
@@ -50,6 +52,8 @@ private:
   SurfacePtr coin_surface;
   SurfacePtr fire_surface;
   SurfacePtr ice_surface;
+  SurfacePtr fire_surface_mario;
+  SurfacePtr ice_surface_mario;
 
   float mario_health_y;
   int mario_health_state;
