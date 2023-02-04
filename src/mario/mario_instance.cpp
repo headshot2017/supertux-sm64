@@ -729,6 +729,7 @@ void MarioInstance::heal(uint8_t amount)
 void MarioInstance::burn()
 {
   if (!spawned() || state.action & ACT_FLAG_INVULNERABLE || m_attacked) return;
+  m_player->ungrab_object();
   sm64_set_mario_action_arg(mario_id, ACT_BURNING_JUMP, 1);
   sm64_play_sound_global(SOUND_MARIO_ON_FIRE);
 }

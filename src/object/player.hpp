@@ -223,6 +223,12 @@ public:
   /** Boosts Tux in a certain direction, sideways. Useful for bumpers/walljumping. */
   void sideways_push(float delta);
 
+  /**
+   * Ungrabs the currently grabbed object, if any. Only call with its argument
+   * from an ObjectRemoveListener.
+   */
+  void ungrab_object(GameObject* gameobject = nullptr);
+
 private:
   void handle_input();
   void handle_input_ghost(); /**< input handling while in ghost mode */
@@ -246,12 +252,6 @@ private:
   void apply_friction();
 
   void check_bounds();
-
-  /**
-   * Ungrabs the currently grabbed object, if any. Only call with its argument
-   * from an ObjectRemoveListener.
-   */
-  void ungrab_object(GameObject* gameobject = nullptr);
 
 private:
   bool m_deactivated;
