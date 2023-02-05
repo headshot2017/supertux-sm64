@@ -17,6 +17,10 @@
 
 #include "supertux/menu/options_menu.hpp"
 
+extern "C" {
+#include <libsm64.h>
+}
+
 #include "audio/sound_manager.hpp"
 #include "gui/dialog.hpp"
 #include "gui/item_goto.hpp"
@@ -607,6 +611,7 @@ OptionsMenu::menu_action(MenuItem& item)
         bool sound_enabled = g_config->sound_volume > 0 ? true : false;
         SoundManager::current()->enable_sound(sound_enabled);
         SoundManager::current()->set_sound_volume(g_config->sound_volume);
+        sm64_set_sound_volume(g_config->sound_volume / 100.f);
         g_config->save();
       }
       break;

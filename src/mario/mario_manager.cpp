@@ -17,6 +17,8 @@ extern "C" {
 #include "addon/md5.hpp"
 #include "gui/dialog.hpp"
 #include "supertux/console.hpp"
+#include "supertux/gameconfig.hpp"
+#include "supertux/globals.hpp"
 #include "util/log.hpp"
 #include "video/video_system.hpp"
 
@@ -232,6 +234,7 @@ MarioManager::MarioManager()
       /** init SM64 audio */
       sm64_audio_init(romBuffer);
       audio_init();
+      sm64_set_sound_volume(g_config->sound_volume / 100.f);
       sm64_play_sound_global(SOUND_MENU_STAR_SOUND);
 
       /** load textures into opengl */
