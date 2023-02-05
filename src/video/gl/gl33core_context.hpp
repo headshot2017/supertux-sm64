@@ -56,6 +56,7 @@ public:
 
   /** mario only */
   virtual void init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w, int h, bool linear) override {}
+  virtual void destroy_sm64_texture(uint32_t* texture) override {}
   virtual void render_mario_instance(const SM64MarioGeometryBuffers* geometry, const Vector& pos, const Vector& camera, const uint32_t cap, const uint32_t& texture, const uint16_t* indices) override {}
   virtual void render_sm64_texture(const uint32_t& texture, const Vector& pos, const Vector& size, const Vector& texCoord1, const Vector& texCoord2, const Color& color) override {}
 

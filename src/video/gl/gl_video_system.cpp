@@ -353,4 +353,10 @@ GLVideoSystem::init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w,
   m_context->init_sm64_texture(raw_texture, texture, w, h, linear);
 }
 
+void
+GLVideoSystem::destroy_sm64_texture(uint32_t* texture)
+{
+  m_context->destroy_sm64_texture(texture);
+}
+
 /* EOF */

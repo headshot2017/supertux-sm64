@@ -54,6 +54,7 @@ public:
 
   /** mario only */
   virtual void init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w, int h, bool linear) {}
+  virtual void destroy_sm64_texture(uint32_t* texture) {}
 
 private:
   Size m_window_size;

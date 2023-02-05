@@ -53,6 +53,7 @@ public:
 
   /** mario only */
   virtual void init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w, int h, bool linear) override {}
+  virtual void destroy_sm64_texture(uint32_t* texture) override {}
 
 private:
   void create_window();

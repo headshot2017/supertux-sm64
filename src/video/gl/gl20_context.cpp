@@ -205,6 +205,12 @@ GL20Context::init_sm64_texture(uint8_t* raw_texture, uint32_t* texture, int w, i
 }
 
 void
+GL20Context::destroy_sm64_texture(uint32_t* texture)
+{
+  glDeleteTextures(1, texture);
+}
+
+void
 GL20Context::render_mario_instance(const SM64MarioGeometryBuffers* geometry, const Vector& pos, const Vector& camera, const uint32_t cap, const uint32_t& texture, const uint16_t* indices)
 {
   uint32_t triangleSize = geometry->numTrianglesUsed*3;
