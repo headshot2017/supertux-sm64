@@ -317,7 +317,7 @@ Player::do_scripting_controller(const std::string& control_text, bool pressed)
 }
 
 bool
-Player::adjust_height(float new_height, float bottom_offset)
+Player::adjust_height(float new_height, float bottom_offset, bool mario)
 {
   Rectf bbox2 = m_col.m_bbox;
   bbox2.move(Vector(0, m_col.m_bbox.get_height() - new_height - bottom_offset));
@@ -333,7 +333,7 @@ Player::adjust_height(float new_height, float bottom_offset)
 
   // adjust bbox accordingly
   // note that we use members of moving_object for this, so we can run this during CD, too
-  set_pos(bbox2.p1());
+  if (!mario) set_pos(bbox2.p1());
   m_col.set_size(bbox2.get_width(), bbox2.get_height());
   return true;
 }
@@ -632,7 +632,14 @@ Player::update(float dt_sec)
   }
 
   if (m_mario) {
+    bool oldDuck = m_duck;
     m_mario_obj->update(dt_sec);
+    m_duck = (m_mario_obj->state.action & ACT_FLAG_SHORT_HITBOX);
+    if (m_duck && !oldDuck)
+      adjust_height(DUCKED_TUX_HEIGHT, 0, true);
+    else if (!m_duck && oldDuck)
+      adjust_height(BIG_TUX_HEIGHT, 0, true);
+
     m_dir = (m_mario_obj->state.faceAngle > 0 && m_mario_obj->state.faceAngle < math::PI) ? Direction::RIGHT : Direction::LEFT;
 
     if (!m_deactivated)
