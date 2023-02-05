@@ -251,4 +251,19 @@ MarioManager::MarioManager()
   }
 }
 
+MarioManager::~MarioManager()
+{
+  sm64_global_terminate();
+
+  VideoSystem::current()->destroy_sm64_texture(&mario_texture_handle);
+  VideoSystem::current()->destroy_sm64_texture(&health_texture_handle);
+  VideoSystem::current()->destroy_sm64_texture(&ui_texture_handle);
+  VideoSystem::current()->destroy_sm64_texture(&coin_texture_handle);
+
+  delete[] mario_texture;
+  delete[] health_texture;
+  delete[] ui_texture;
+  delete[] coin_texture;
+}
+
 /* EOF */

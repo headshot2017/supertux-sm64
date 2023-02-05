@@ -21,6 +21,7 @@ class MarioManager final : public Currenton<MarioManager>
 {
 public:
   MarioManager();
+  ~MarioManager();
 
   std::string error_message;
   bool Loaded() const { return loaded; }
