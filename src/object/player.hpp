@@ -156,6 +156,7 @@ public:
   void bounce(BadGuy& badguy);
 
   bool is_dead() const { return m_dead; }
+  bool is_deactivated() const { return m_deactivated; }
   bool is_big() const;
   bool is_stone() const { return m_stone; }
   bool is_swimming() const { return m_swimming; }

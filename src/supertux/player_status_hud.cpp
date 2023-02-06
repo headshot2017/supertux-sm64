@@ -267,7 +267,7 @@ PlayerStatusHUD::draw(DrawingContext& context)
   if (Sector::current()) // don't run this code if on worldmap
   {
     Player& tux = Sector::get().get_player();
-    if (tux.is_mario())
+    if (tux.is_mario() && !tux.is_deactivated())
     {
       context.color().draw_sm64_texture(MarioManager::current()->health_texture_handle,
                                         Vector(SCREEN_WIDTH/2.f-62, mario_health_y),
