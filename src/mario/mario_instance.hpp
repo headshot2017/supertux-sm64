@@ -98,7 +98,7 @@ public:
   void set_pos(const Vector& pos);
   void set_velocity(const Vector& vel);
 
-  bool dead() const { return state.health == MARIO_DEAD_HEALTH; }
+  bool dead() const { return state.health <= MARIO_DEAD_HEALTH; }
   bool spawned() const { return mario_id != -1; }
   bool attacked() const { return m_attacked; }
   int ID() const { return mario_id; }
