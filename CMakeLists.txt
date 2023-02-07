@@ -927,7 +927,6 @@ endif(GENERATE_WRAPPER)
 
 ## SM64
 add_subdirectory(external/libsm64)
-include_directories(external/libsm64/src)
 
 ## Generate supertux executable in the right place
 

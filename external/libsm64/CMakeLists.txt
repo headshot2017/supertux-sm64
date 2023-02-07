@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.8.7)
+project(libsm64)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(CMAKE_C_FLAGS_DEBUG -g)
@@ -33,7 +34,7 @@ file(GLOB MARIO_SOURCES src/decomp/mario/*.c)
 
 add_library(sm64 SHARED ${SOURCES} ${MARIO_SOURCES})
 
-include_directories(src)
+target_include_directories(sm64 PUBLIC src)
 include_directories(src/decomp/include)
 include_directories(src/decomp/mario)
 
