@@ -418,9 +418,15 @@ GameSession::update(float dt_sec, const Controller& controller)
     m_currentsector->play_looping_sounds();
 
     if (m_currentsector->get_player().is_mario()) {
-      sm64_set_mario_action(m_currentsector->get_player().m_mario_obj->ID(), oldState.action);
-      sm64_set_mario_velocity(m_currentsector->get_player().m_mario_obj->ID(), oldState.velocity[0], oldState.velocity[1], oldState.velocity[2]);
-      sm64_set_mario_faceangle(m_currentsector->get_player().m_mario_obj->ID(), oldState.faceAngle);
+      float yVel = (oldState.velocity[1] > 0) ? 200 : oldState.velocity[1];
+      MarioInstance* mario = m_currentsector->get_player().m_mario_obj;
+
+      mario->state = oldState;
+      mario->input.buttonA = (oldState.velocity[1] > 0);
+
+      sm64_set_mario_action(mario->ID(), oldState.action);
+      sm64_set_mario_velocity(mario->ID(), oldState.velocity[0], yVel, oldState.velocity[2]);
+      sm64_set_mario_faceangle(mario->ID(), oldState.faceAngle);
     }
 
     if (is_playing_demo())
