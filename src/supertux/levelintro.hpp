@@ -17,6 +17,7 @@
 #ifndef HEADER_SUPERTUX_SUPERTUX_LEVELINTRO_HPP
 #define HEADER_SUPERTUX_SUPERTUX_LEVELINTRO_HPP
 
+#include "mario/mario_instance.hpp"
 #include "sprite/sprite_ptr.hpp"
 #include "supertux/screen.hpp"
 #include "supertux/timer.hpp"
@@ -58,6 +59,9 @@ private:
   float m_player_sprite_vy; /**< Velocity (y axis) for the player sprite */
   Timer m_player_sprite_jump_timer; /**< When timer fires, the player sprite will "jump" */
   const PlayerStatus& m_player_status; /**The player status passed from GameSession*/
+
+  MarioInstance m_mario;
+  uint32_t m_mario_block;
 
 private:
   LevelIntro(const LevelIntro&) = delete;

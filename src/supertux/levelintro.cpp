@@ -16,6 +16,11 @@
 
 #include "supertux/levelintro.hpp"
 
+extern "C" {
+#include <decomp/include/audio_defines.h>
+#include <decomp/include/surface_terrains.h>
+}
+
 #include "control/input_manager.hpp"
 #include "math/random.hpp"
 #include "sprite/sprite.hpp"
@@ -40,7 +45,9 @@ LevelIntro::LevelIntro(const Level& level, const Statistics* best_level_statisti
   m_player_sprite_py(0),
   m_player_sprite_vy(0),
   m_player_sprite_jump_timer(),
-  m_player_status(player_status)
+  m_player_status(player_status),
+  m_mario(&Sector::get().get_player()),
+  m_mario_block(0)
 {
   //Show appropriate tux animation for player status.
   if (m_player_status.bonus == FIRE_BONUS && g_config->christmas_mode)
@@ -60,11 +67,48 @@ LevelIntro::LevelIntro(const Level& level, const Statistics* best_level_statisti
 
 LevelIntro::~LevelIntro()
 {
+  if (!m_mario.spawned()) return;
+  m_mario.destroy();
+  sm64_surface_object_delete(m_mario_block);
 }
 
 void
 LevelIntro::setup()
 {
+  if (!g_config->mario) return;
+
+  // spawn a fake surface object for mario to run on
+  int x = 0, y = 0;
+  int spawnX = x / MARIO_SCALE;
+  int spawnY = -y / MARIO_SCALE;
+
+  struct SM64SurfaceObject obj;
+  memset(&obj.transform, 0, sizeof(struct SM64ObjectTransform));
+  obj.transform.position[0] = spawnX;
+  obj.transform.position[1] = spawnY;
+  obj.transform.position[2] = 0;
+  obj.surfaceCount = 2;
+  obj.surfaces = (struct SM64Surface*)malloc(sizeof(struct SM64Surface) * obj.surfaceCount);
+
+  for (uint32_t i=0; i<obj.surfaceCount; i++)
+  {
+    obj.surfaces[i].type = SURFACE_DEFAULT;
+    obj.surfaces[i].force = 0;
+    obj.surfaces[i].terrain = TERRAIN_STONE;
+  }
+
+  obj.surfaces[obj.surfaceCount-2].vertices[0][0] = +128;	obj.surfaces[obj.surfaceCount-2].vertices[0][1] = 0;	obj.surfaces[obj.surfaceCount-2].vertices[0][2] = +128;
+  obj.surfaces[obj.surfaceCount-2].vertices[1][0] = -128;	obj.surfaces[obj.surfaceCount-2].vertices[1][1] = 0;	obj.surfaces[obj.surfaceCount-2].vertices[1][2] = -128;
+  obj.surfaces[obj.surfaceCount-2].vertices[2][0] = -128;	obj.surfaces[obj.surfaceCount-2].vertices[2][1] = 0;	obj.surfaces[obj.surfaceCount-2].vertices[2][2] = +128;
+
+  obj.surfaces[obj.surfaceCount-1].vertices[0][0] = -128;	obj.surfaces[obj.surfaceCount-1].vertices[0][1] = 0;	obj.surfaces[obj.surfaceCount-1].vertices[0][2] = -128;
+  obj.surfaces[obj.surfaceCount-1].vertices[1][0] = +128;	obj.surfaces[obj.surfaceCount-1].vertices[1][1] = 0;	obj.surfaces[obj.surfaceCount-1].vertices[1][2] = +128;
+  obj.surfaces[obj.surfaceCount-1].vertices[2][0] = +128;	obj.surfaces[obj.surfaceCount-1].vertices[2][1] = 0;	obj.surfaces[obj.surfaceCount-1].vertices[2][2] = -128;
+
+  m_mario_block = sm64_surface_object_create(&obj);
+  free(obj.surfaces);
+
+  m_mario.spawn(x, y, false);
 }
 
 void
@@ -85,21 +129,32 @@ LevelIntro::update(float dt_sec, const Controller& controller)
     ScreenManager::current()->pop_screen(std::make_unique<FadeToBlack>(FadeToBlack::FADEOUT, 0.1f));
   }
 
-  m_player_sprite_py += m_player_sprite_vy * dt_sec;
-  m_player_sprite_vy += 100 * dt_sec * Sector::get().get_gravity();
-  if (m_player_sprite_py >= 0) {
-    m_player_sprite_py = 0;
-    m_player_sprite_vy = 0;
-    m_player_sprite->set_action(bonus_prefix + "-walk-right");
+  if (!m_mario.spawned()) {
+    m_player_sprite_py += m_player_sprite_vy * dt_sec;
+    m_player_sprite_vy += 100 * dt_sec * Sector::get().get_gravity();
+    if (m_player_sprite_py >= 0) {
+      m_player_sprite_py = 0;
+      m_player_sprite_vy = 0;
+      m_player_sprite->set_action(bonus_prefix + "-walk-right");
+    } else {
+
+      m_player_sprite->set_action(bonus_prefix + "-jump-right");
+    }
+    if (m_player_sprite_jump_timer.check()) {
+      m_player_sprite_vy = -300;
+      m_player_sprite_jump_timer.start(graphicsRandom.randf(2,3));
+    }
   } else {
-
-    m_player_sprite->set_action(bonus_prefix + "-jump-right");
+    sm64_set_mario_position(m_mario.ID(), 0, m_mario.state.position[1], 0);
+    if (m_player_sprite_jump_timer.check()) {
+      m_mario.input.buttonA = true;
+      m_player_sprite_jump_timer.start(graphicsRandom.randf(2,3));
+    } else {
+      m_mario.input.buttonA = false;
+    }
+    m_mario.input.stickX = -1;
+    m_mario.update(dt_sec);
   }
-  if (m_player_sprite_jump_timer.check()) {
-    m_player_sprite_vy = -300;
-    m_player_sprite_jump_timer.start(graphicsRandom.randf(2,3));
-  }
-
 }
 
 void LevelIntro::draw_stats_line(DrawingContext& context, int& py, const std::string& name, const std::string& stat, bool isPerfect)
@@ -140,6 +195,7 @@ LevelIntro::draw(Compositor& compositor)
 
   py += 32;
 
+  if (!m_mario.spawned())
   {
     m_player_sprite->draw(context.color(), Vector((static_cast<float>(context.get_width()) - m_player_sprite->get_current_hitbox_width()) / 2,
                                                 static_cast<float>(py) + m_player_sprite_py), LAYER_FOREGROUND1);
@@ -148,11 +204,12 @@ LevelIntro::draw(Compositor& compositor)
       m_power_sprite->draw(context.color(), Vector((static_cast<float>(context.get_width()) - m_player_sprite->get_current_hitbox_width()) / 2,
                                                   static_cast<float>(py) + m_player_sprite_py), LAYER_FOREGROUND1);
     }
-
-    py += static_cast<int>(m_player_sprite->get_current_hitbox_height());
   }
-
-  py += 32;
+  else
+  {
+    m_mario.draw(context.color(), Vector(static_cast<float>(context.get_width()) / -2, -py - m_player_sprite->get_current_hitbox_height()));
+  }
+  py += static_cast<int>(m_player_sprite->get_current_hitbox_height()) + 32;
 
   if (m_best_level_statistics)
   {

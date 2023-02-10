@@ -402,7 +402,7 @@ MarioInstance::~MarioInstance()
   destroy();
 }
 
-void MarioInstance::spawn(float x, float y)
+void MarioInstance::spawn(float x, float y, bool loadCollision)
 {
   destroy();
   tick = 0;
@@ -423,7 +423,7 @@ void MarioInstance::spawn(float x, float y)
 
   ConsoleBuffer::output << "Attempt to spawn Mario at " << x << " " << y << std::endl;
 
-  load_new_blocks(x/32, y/32);
+  if (loadCollision) load_new_blocks(x/32, y/32);
   mario_id = sm64_mario_create(spawnX, spawnY, 0);
 
   if (spawned())
@@ -435,8 +435,11 @@ void MarioInstance::spawn(float x, float y)
     geometry.uv       = new float[6 * SM64_GEO_MAX_TRIANGLES];
     geometry.numTrianglesUsed = 0;
 
-    load_all_movingobjects();
-    load_all_path_blocks();
+    if (loadCollision)
+    {
+      load_all_movingobjects();
+      load_all_path_blocks();
+    }
 
     // no poison gas
     sm64_set_mario_gas_level(mario_id, -(Sector::get().get_height()+256)/MARIO_SCALE + 32);

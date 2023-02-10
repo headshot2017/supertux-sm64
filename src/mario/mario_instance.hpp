@@ -80,7 +80,7 @@ public:
   MarioInstance(Player* player);
   ~MarioInstance();
 
-  void spawn(float x, float y);
+  void spawn(float x, float y, bool loadCollision=true);
   void destroy();
   void update(float tickspeed);
   void draw(Canvas& canvas, Vector camera);
