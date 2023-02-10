@@ -527,7 +527,7 @@ void MarioInstance::update(float tickspeed)
       MarioMovingObject* sm64obj = &loaded_movingobjects[i];
       if (sm64obj->ID == UINT_MAX || !sm64obj->obj) continue;
 
-      if (!sm64obj->obj->is_valid())
+      if (!sm64obj->obj->is_valid() || !sm64obj->obj->get_uid())
       {
         sm64obj->obj = nullptr;
         sm64obj->transform.position[2] = 256;
