@@ -38,7 +38,7 @@ static const float PEEK_ARRIVE_RATIO = 0.1f;
 class CameraConfig final
 {
 public:
-  // 0 = No, 1 = Fix, 2 = Mario/Yoshi, 3 = Kirby, 4 = Super Metroid-like
+  // 0 = No, 1 = Fix, 2 = Mario/Yoshi, 3 = Kirby, 4 = Super Metroid-like, 5 = Free camera
   int xmode;
   // as above
   int ymode;
@@ -466,23 +466,33 @@ Camera::update_scroll_normal(float dt_sec)
       bottom_edge = static_cast<float>(m_screen_size.height) * (1.0f - config_.clamp_y);
     }
 
-    float peek_to = 0;
-    float translation_compensation = player_pos.y - m_translation.y;
+    if (ymode != 5) {
+      float peek_to = 0;
+      float translation_compensation = player_pos.y - m_translation.y;
 
-    if (player.peeking_direction_y() == Direction::UP) {
-      peek_to = bottom_edge - translation_compensation;
-    } else if (player.peeking_direction_y() == Direction::DOWN) {
-      peek_to = top_edge - translation_compensation;
-    }
+      if (player.peeking_direction_y() == Direction::UP) {
+        peek_to = bottom_edge - translation_compensation;
+      } else if (player.peeking_direction_y() == Direction::DOWN) {
+        peek_to = top_edge - translation_compensation;
+      }
 
-    float peek_move = (peek_to - m_peek_pos.y) * PEEK_ARRIVE_RATIO;
-    if (fabsf(peek_move) < 1.0f) {
-      peek_move = 0.0;
-    }
+      float peek_move = (peek_to - m_peek_pos.y) * PEEK_ARRIVE_RATIO;
+      if (fabsf(peek_move) < 1.0f) {
+        peek_move = 0.0;
+      }
 
-    m_peek_pos.y += peek_move;
+      m_peek_pos.y += peek_move;
 
-    m_translation.y -= m_peek_pos.y;
+      m_translation.y -= m_peek_pos.y;
+    } else {
+      if (player.peeking_direction_y() == Direction::UP) {
+        m_peek_pos.y--;
+      } else if (player.peeking_direction_y() == Direction::DOWN) {
+        m_peek_pos.y++;
+      }
+
+      m_cached_translation.y += m_peek_pos.y/10.f;
+	}
 
     if (config_.clamp_y > 0.0f) {
       m_translation.y = math::clamp(m_translation.y,
@@ -644,23 +654,33 @@ Camera::update_scroll_normal(float dt_sec)
       right_edge = static_cast<float>(m_screen_size.width) * (1.0f - config_.clamp_x);
     }
 
-    float peek_to = 0;
-    float translation_compensation = player_pos.x - m_translation.x;
+    if (xmode != 5) {
+      float peek_to = 0;
+      float translation_compensation = player_pos.x - m_translation.x;
 
-    if (player.peeking_direction_x() == ::Direction::LEFT) {
-      peek_to = right_edge - translation_compensation;
-    } else if (player.peeking_direction_x() == Direction::RIGHT) {
-      peek_to = left_edge - translation_compensation;
-    }
+      if (player.peeking_direction_x() == ::Direction::LEFT) {
+        peek_to = right_edge - translation_compensation;
+      } else if (player.peeking_direction_x() == Direction::RIGHT) {
+        peek_to = left_edge - translation_compensation;
+      }
 
-    float peek_move = (peek_to - m_peek_pos.x) * PEEK_ARRIVE_RATIO;
-    if (fabsf(peek_move) < 1.0f) {
-      peek_move = 0.0f;
-    }
+      float peek_move = (peek_to - m_peek_pos.x) * PEEK_ARRIVE_RATIO;
+      if (fabsf(peek_move) < 1.0f) {
+        peek_move = 0.0f;
+      }
 
-    m_peek_pos.x += peek_move;
+      m_peek_pos.x += peek_move;
 
-    m_translation.x -= m_peek_pos.x;
+      m_translation.x -= m_peek_pos.x;
+    } else {
+      if (player.peeking_direction_x() == ::Direction::LEFT) {
+        m_peek_pos.x--;
+      } else if (player.peeking_direction_x() == Direction::RIGHT) {
+        m_peek_pos.x++;
+      }
+
+      m_cached_translation.x += m_peek_pos.x/10.f;
+	}
 
     if (config_.clamp_x > 0.0f) {
       m_translation.x = math::clamp(m_translation.x,
