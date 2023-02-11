@@ -118,6 +118,7 @@ PlayerStatusHUD::update(float dt_sec)
 void
 PlayerStatusHUD::draw(DrawingContext& context)
 {
+  if (!g_config->show_hud) return;
   int player_id = 0;
 
   if ((displayed_coins == DISPLAYED_COINS_UNSET) ||

@@ -125,6 +125,7 @@ public:
   std::string repository_url;
 
   bool mario;
+  bool show_hud;
 
   bool is_christmas() const {
     try

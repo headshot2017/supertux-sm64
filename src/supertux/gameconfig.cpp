@@ -82,7 +82,8 @@ Config::Config() :
   editor_autotile_help(true),
   editor_autosave_frequency(5),
   repository_url(),
-  mario(true)
+  mario(true),
+  show_hud(true)
 {
 }
 
@@ -112,6 +113,7 @@ Config::load()
   config_mapping.get("pause_on_focusloss", pause_on_focusloss);
   config_mapping.get("custom_mouse_cursor", custom_mouse_cursor);
   config_mapping.get("mario", mario);
+  config_mapping.get("show_hud", show_hud);
 
   boost::optional<ReaderMapping> config_integrations_mapping;
   if (config_mapping.get("integrations", config_integrations_mapping))
@@ -256,6 +258,7 @@ Config::save()
   writer.write("pause_on_focusloss", pause_on_focusloss);
   writer.write("custom_mouse_cursor", custom_mouse_cursor);
   writer.write("mario", mario);
+  writer.write("show_hud", show_hud);
 
   writer.start_list("integrations");
   {

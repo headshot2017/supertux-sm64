@@ -79,7 +79,8 @@ enum OptionsMenuIDs {
   MNID_CONFIRMATION_DIALOG,
   MNID_PAUSE_ON_FOCUSLOSS,
   MNID_CUSTOM_CURSOR,
-  MNID_MARIO
+  MNID_MARIO,
+  MNID_HUD,
 #ifdef ENABLE_TOUCHSCREEN_SUPPORT
   , MNID_MOBILE_CONTROLS
 #endif
@@ -443,6 +444,8 @@ OptionsMenu::OptionsMenu(bool complete) :
 
   if (MarioManager::current()->Loaded())
     add_toggle(MNID_MARIO, "Mario", &g_config->mario).set_help("Play as Mario from SM64 instead of Tux");
+
+  add_toggle(MNID_HUD, "Show HUD", &g_config->show_hud).set_help("Display HUD in-game");
 
   add_submenu(_("Integrations and presence"), MenuStorage::INTEGRATIONS_MENU)
       .set_help(_("Manage whether SuperTux should display the levels you play on your social media profiles (Discord)"));
