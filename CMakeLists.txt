@@ -945,7 +945,7 @@ target_link_libraries(supertux2_lib PUBLIC glm::glm)
 target_compile_definitions(supertux2_lib PUBLIC -DGLM_ENABLE_EXPERIMENTAL)
 
 if(WIN32)
-  add_executable(supertux2 src/main.cpp ${CMAKE_CURRENT_SOURCE_DIR}/data/images/engine/icons/supertux.rc)
+  add_executable(supertux2 WIN32 src/main.cpp ${CMAKE_CURRENT_SOURCE_DIR}/data/images/engine/icons/supertux.rc)
   target_link_libraries(supertux2 ${SDL2MAIN_LIBRARIES})
 else()
   add_executable(supertux2 src/main.cpp)
