@@ -444,8 +444,8 @@ void MarioInstance::spawn(float x, float y, bool loadCollision)
     // no poison gas
     sm64_set_mario_gas_level(mario_id, -(Sector::get().get_height()+256)/MARIO_SCALE + 32);
 
-    // load a static surface way below the level
-    uint32_t surfaceCount = 2;
+    // load static surfaces: below the level, and left/right borders to prevent mario from escaping
+    uint32_t surfaceCount = 6;
     SM64Surface surfaces[surfaceCount];
 
     for (uint32_t i=0; i<surfaceCount; i++)
@@ -455,17 +455,39 @@ void MarioInstance::spawn(float x, float y, bool loadCollision)
       surfaces[i].terrain = TERRAIN_STONE;
     }
 
-    int width = Sector::get().get_width()/2 / MARIO_SCALE;
-    int spawnX = width;
+    int width = Sector::get().get_width() / MARIO_SCALE;
+    int spawnX = width/2;
     int spawnY = (Sector::get().get_height()+256) / -MARIO_SCALE;
 
-    surfaces[surfaceCount-2].vertices[0][0] = spawnX + width + 128;		surfaces[surfaceCount-2].vertices[0][1] = spawnY;	surfaces[surfaceCount-2].vertices[0][2] = +128;
-    surfaces[surfaceCount-2].vertices[1][0] = spawnX - width - 128;		surfaces[surfaceCount-2].vertices[1][1] = spawnY;	surfaces[surfaceCount-2].vertices[1][2] = -128;
-    surfaces[surfaceCount-2].vertices[2][0] = spawnX - width - 128;		surfaces[surfaceCount-2].vertices[2][1] = spawnY;	surfaces[surfaceCount-2].vertices[2][2] = +128;
+    surfaces[0].vertices[0][0] = spawnX + width/2 + 128;	surfaces[0].vertices[0][1] = spawnY;	surfaces[0].vertices[0][2] = +128;
+    surfaces[0].vertices[1][0] = spawnX - width/2 - 128;	surfaces[0].vertices[1][1] = spawnY;	surfaces[0].vertices[1][2] = -128;
+    surfaces[0].vertices[2][0] = spawnX - width/2 - 128;	surfaces[0].vertices[2][1] = spawnY;	surfaces[0].vertices[2][2] = +128;
 
-    surfaces[surfaceCount-1].vertices[0][0] = spawnX - width - 128;		surfaces[surfaceCount-1].vertices[0][1] = spawnY;	surfaces[surfaceCount-1].vertices[0][2] = -128;
-    surfaces[surfaceCount-1].vertices[1][0] = spawnX + width + 128;		surfaces[surfaceCount-1].vertices[1][1] = spawnY;	surfaces[surfaceCount-1].vertices[1][2] = +128;
-    surfaces[surfaceCount-1].vertices[2][0] = spawnX + width + 128;		surfaces[surfaceCount-1].vertices[2][1] = spawnY;	surfaces[surfaceCount-1].vertices[2][2] = -128;
+    surfaces[1].vertices[0][0] = spawnX - width/2 - 128;	surfaces[1].vertices[0][1] = spawnY;	surfaces[1].vertices[0][2] = -128;
+    surfaces[1].vertices[1][0] = spawnX + width/2 + 128;	surfaces[1].vertices[1][1] = spawnY;	surfaces[1].vertices[1][2] = +128;
+    surfaces[1].vertices[2][0] = spawnX + width/2 + 128;	surfaces[1].vertices[2][1] = spawnY;	surfaces[1].vertices[2][2] = -128;
+
+
+    // left side
+    int y1 = -Sector::get().get_height() / MARIO_SCALE, y2 = 0;
+    surfaces[2].vertices[0][0] = 0;    surfaces[2].vertices[0][1] = y1 / MARIO_SCALE;    surfaces[2].vertices[0][2] = 64 / MARIO_SCALE;
+    surfaces[2].vertices[1][0] = 0;    surfaces[2].vertices[1][1] = y2 / MARIO_SCALE;    surfaces[2].vertices[1][2] = -64 / MARIO_SCALE;
+    surfaces[2].vertices[2][0] = 0;    surfaces[2].vertices[2][1] = y2 / MARIO_SCALE;    surfaces[2].vertices[2][2] = 64 / MARIO_SCALE;
+
+    surfaces[3].vertices[0][0] = 0;    surfaces[3].vertices[0][1] = y2 / MARIO_SCALE;    surfaces[3].vertices[0][2] = -64 / MARIO_SCALE;
+    surfaces[3].vertices[1][0] = 0;    surfaces[3].vertices[1][1] = y1 / MARIO_SCALE;    surfaces[3].vertices[1][2] = 64 / MARIO_SCALE;
+    surfaces[3].vertices[2][0] = 0;    surfaces[3].vertices[2][1] = y1 / MARIO_SCALE;    surfaces[3].vertices[2][2] = -64 / MARIO_SCALE;
+
+
+    // right side
+    surfaceCount += 2;
+    surfaces[4].vertices[0][0] = Sector::get().get_width() / MARIO_SCALE;    surfaces[4].vertices[0][1] = y1 / MARIO_SCALE;    surfaces[4].vertices[0][2] = -64 / MARIO_SCALE;
+    surfaces[4].vertices[1][0] = Sector::get().get_width() / MARIO_SCALE;    surfaces[4].vertices[1][1] = y2 / MARIO_SCALE;    surfaces[4].vertices[1][2] = 64 / MARIO_SCALE;
+    surfaces[4].vertices[2][0] = Sector::get().get_width() / MARIO_SCALE;    surfaces[4].vertices[2][1] = y2 / MARIO_SCALE;    surfaces[4].vertices[2][2] = -64 / MARIO_SCALE;
+
+    surfaces[5].vertices[0][0] = Sector::get().get_width() / MARIO_SCALE;    surfaces[5].vertices[0][1] = y2 / MARIO_SCALE;    surfaces[5].vertices[0][2] = 64 / MARIO_SCALE;
+    surfaces[5].vertices[1][0] = Sector::get().get_width() / MARIO_SCALE;    surfaces[5].vertices[1][1] = y1 / MARIO_SCALE;    surfaces[5].vertices[1][2] = -64 / MARIO_SCALE;
+    surfaces[5].vertices[2][0] = Sector::get().get_width() / MARIO_SCALE;    surfaces[5].vertices[2][1] = y1 / MARIO_SCALE;    surfaces[5].vertices[2][2] = 64 / MARIO_SCALE;
 
     sm64_static_surfaces_load(surfaces, surfaceCount);
 
