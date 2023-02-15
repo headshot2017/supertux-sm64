@@ -427,6 +427,7 @@ GameSession::update(float dt_sec, const Controller& controller)
       sm64_set_mario_action(mario->ID(), oldState.action);
       sm64_set_mario_velocity(mario->ID(), oldState.velocity[0], yVel, oldState.velocity[2]);
       sm64_set_mario_faceangle(mario->ID(), oldState.faceAngle);
+      sm64_set_mario_health(mario->ID(), oldState.health);
     }
 
     if (is_playing_demo())
